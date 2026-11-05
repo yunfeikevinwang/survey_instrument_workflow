@@ -13,24 +13,35 @@ How we write, implement, and review survey instruments.
 
 ## Formatting rules
 
-Each Markdown element means something different in plain text and in code.
-Code goes *inside* other elements, e.g. a heading or a list item, never the other way round: Markdown inside code doesn't render.
-In general, use Markdown as you like if the meaning is clear.
+### The rule
+| Format | Meaning |
+|---|---|
+| ``Plain text`` | Visible to participants|
+| `` `code` `` | Not visible to participants |
 
-| Element | Markdown syntax | Plain text | Code text |
-|---|---|---|---|
-| **In general** | | Visible to participants | Not visible to participants |
-| Heading | `# H1`<br>`## H2`<br>`### H3` | Heading shown to participants, e.g. `### Welcome!` | Internal name (block, question sub-version), e.g. ``## `Block 1` `` |
-| Bold | `**bold text**` | Bold text shown to participants | Not applicable: doesn't render inside code |
-| Italic | `*italicized text*` | Italic text shown to participants | Not applicable: doesn't render inside code |
-| Blockquote | `> blockquote` | Not used | Not used |
-| Ordered list | `1. First item`<br>`2. Second item`<br>`3. Third item` | Answer options, when logic refers to options by number | Not applicable: put code inside the item instead, e.g. ``2. No `→ Skip to Block 4` `` |
-| Unordered list | `- First item`<br>`- Second item`<br>`- Third item` | Answer options | Not applicable: put code inside the item instead, e.g. ``- No `→ Skip to Block 4` `` |
-| Code | `` `code` `` | Not applicable | Variables: `` `[Variable]` ``<br>Logic: `` `If true, set [Variable] = 1` ``<br>Piped text: ``You selected `[Variable]`.``<br>Images: `` `image_of_cat.png` `` |
-| Code block | ` ``` ` on the lines before and after | Not applicable | Logic spanning several lines |
-| Horizontal rule | `---` | Page break | Not applicable |
-| Link | `[title](https://www.example.com)` | Link shown to participants | Not applicable: shows as a literal URL |
-| Image | `![alt text](image.jpg)` | Not used: images live in Google Drive | Not used: write the file name in code instead |
+
+### Recommendations
+In general, use headings,  lists, and other Markdown as you like if the meaning is clear.
+
+**Plain text (visible to participants)**
+
+| What | Recommendation | Example |
+|---|---|---|
+| Answer options | Bullets | `- Yes` |
+| Headings | Markdown heading | `### Welcome!` |
+| Page break | Markdown horizontal line |`---`|
+
+**Code (not visible to participants)**
+
+| What | Recommendation | Example |
+|---|---|---|
+| Internal names | Markdown heading | `` `## Block 1` `` |
+| Variable | Bracketed name | `` `[Variable]` `` |
+| Logic | Plain text | `` `If true, set [Variable] = 1` `` |
+| Piped text | Plain text | ``You selected `[Variable]`.`` |
+| Images | File name in inline code | `` `q5a_comparison_chart.png` `` |
+
+Bold or italics inside code shows as literal asterisks, so don't format text in code.
 
 ## Iteration loop
 
