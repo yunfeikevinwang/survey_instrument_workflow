@@ -4,7 +4,7 @@ A simple workflow for implementing survey instruments that is AI-friendly.
 ## Basic Components
 1. **Instrument + Images:** former is written in Markdown on Github, latter is a Google Drive folder.
     - Each `instrument_vN.md` is a complete copy of the instrument for version N.
-    - Each image should have a descriptive name, and are in Google Drive folder `/images_vN` for version N.
+    - Each image should have a descriptive name, and are in Google Drive folder `/images_vN` containing all images needed in version N.
 2. **Implementation:** built in Qualtrics from the Markdown using AI.
     - Each implementation on Qualtrics is a separate project for version N.
 3. **Review Document** humans comment on a Google Docs copy of the instrument and implementation.
@@ -13,7 +13,7 @@ A simple workflow for implementing survey instruments that is AI-friendly.
 ## Iteration loop
 
 1. **Create Instrument and Images.** AI+predocs create version N of the instrument and images.
-2. **Implement.** AI implements the changes in Qualtrics with skills, comparing old `instrument_v(N-1).md` with new `instrument_vN.md`. Predocs checks everything for correctness, formatting, and maintainable logic. At this point, it is okay to tweak the new instrument to make sure things are fully specified.
+2. **Implement.** AI implements the changes in Qualtrics with skills, comparing old `instrument_v(N-1).md` with new `instrument_vN.md`. Predocs checks everything for correctness, formatting, and maintainable logic. At this point, it is okay to tweak the new instrument to make sure things are fully specified and match.
 3. **Review.** Now, `instrument_vN.md`, `/images_vN`, and implementation are _frozen_. Based on the implementation, PIs leave comments and suggested edits to the instrument uploaded to Google Docs.
 4. **Update Instrument and Images.** Now the review document are _frozen_. Download comments and suggestions as word document. AI+predoc reads it and drafts `instrument_v(N+1).md`.
 
