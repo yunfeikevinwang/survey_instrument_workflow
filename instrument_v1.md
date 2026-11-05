@@ -10,9 +10,10 @@ Survey setup:
 
 ## `Block 1: Consent`
 
-`[[consent_header_logo.png]]`
+`consent_header_logo.png`
 
-**Welcome!**
+### Welcome!
+
 This survey takes about *10 minutes*.
 Your answers are anonymous.
 
@@ -58,7 +59,7 @@ Else:
 Many people use **more than one** chatbot.
 Below is a short comparison.
 
-`[[q5a_comparison_chart.png]]`
+`q5a_comparison_chart.png`
 
 ### `Q5b (control arm)`
 

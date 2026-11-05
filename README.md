@@ -20,33 +20,33 @@ instrument_v3.md      ← current version (the only file anyone edits)
 
 ## Formatting rules
 
-### The key rule
+### The rule
 
-> **Anything that will not appear to respondents exactly as written goes in `code`.**
+| Format | Meaning |
+|---|---|
+| Plain text | Visible to participants, exactly as written (including bold, italics, headings, and lists) |
+| `code` | Not visible to participants |
 
-Plain text is exactly what respondents see.
-Everything else uses inline code, or a fenced code block for longer text: block names, question labels, logic, piped text, images, and notes.
-
-| What | How | Example |
-|---|---|---|
-| Survey title, blocks, question sub-versions | Headings `#` / `##` / `###`, with the name in code | ``## `Block 2: AI usage` `` |
-| Question label | Code | `` `Q2.` `` |
-| Question text | Bold | `**Have you used an AI chatbot in the past 30 days?**` |
-| Instructions shown to respondents | Italics | `*(Select all that apply)*` |
-| Answer options | Bullets; numbers when logic refers to options by number | `- Yes` / `1. ChatGPT` |
-| Short logic | Inline code | `` `→ Skip to Block 4` `` |
-| Longer logic | Fenced code block | see [instrument_v1.md](instrument_v1.md) |
-| Piped text | Inline code, as Qualtrics writes it | `` `${q://QID3/ChoiceGroup/SelectedChoices}` `` |
-| Images | Inline code with the file name in double brackets | `` `[[q5a_comparison_chart.png]]` `` |
-| Text entry boxes | Inline code | ``- Other: `text entry box` `` |
-
+Use inline code for short text and a fenced code block for longer text.
 The one exception: the Google Drive folder link at the top of each file stays a normal link, so it is clickable.
 
-### Other rules
+### Recommendations
 
-- **One sentence per line.** Separate paragraphs with a blank line. Lines next to each other still display as one paragraph, and git diffs show changes sentence by sentence.
-- **Image file names are descriptive** (`q5a_comparison_chart.png`, not `image3.png`). Use the file name only, with no path or description.
-- **Formatting inside code doesn't work.** Bold or italics inside backticks shows as literal asterisks. Logic doesn't need formatting, so this shouldn't come up.
+Use headings, lists, and other Markdown as you like.
+These conventions keep instruments consistent:
+
+| What | Recommendation | Example |
+|---|---|---|
+| Answer options | Bullets | `- Yes` |
+| Heading shown to participants | `###` | `### Welcome!` |
+| Structure (blocks, question sub-versions) | Heading with the name in code | ``## `Block 2: AI usage` `` |
+| Question labels | Code | `` `Q2.` `` |
+| Logic | Inline code next to what it applies to; a fenced block for longer logic | `` `→ Skip to Block 4` `` |
+| Piped text | Code, as Qualtrics writes it | `` `${q://QID3/ChoiceGroup/SelectedChoices}` `` |
+| Images | Descriptive file name in code | `` `q5a_comparison_chart.png` `` |
+| Line breaks | One sentence per line, blank line between paragraphs, for precise diffs and comments | |
+
+Bold or italics inside code shows as literal asterisks, so don't format text in code.
 
 ## Iteration loop
 
