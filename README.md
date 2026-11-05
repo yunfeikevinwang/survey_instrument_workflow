@@ -33,11 +33,14 @@ A simple workflow for implementing survey instruments that is AI-friendly.
 | Instructions | Use bold and italics as needed | `Please **read** this _carefully_.` |
 | Section headings | Use headers| `### Welcome to the study` |
 | Page break | Use horizontal rule | `---` |
+| Line break | Leave a blank line; adjacent lines join into one paragraph | `First line.`<br><br>`Second line.` |
 
 ### Code rules
 | What | Recommendation | Syntax |
 |---|---|---|
-| Internal headings | Use headers | `` `### Block 1` `` |
+| Internal headings | Use headers, with only the name in code | ``### `Block 1` `` |
+| Question types and settings | Use code next to the question | `` `Multiple choice, select all that apply` `` |
+| Variable definitions | List every variable with a description in a code block at the top of the instrument, mirroring the embedded data at the top of the Qualtrics survey flow | `` `[Variable]: description` `` |
 | Piped Variable | Use bracketed name | `` `[Variable]` `` |
 | Logic | No constraints, use code blocks for longer sections | `` `If true, set [Variable] = 1` `` |
 | Images | Use filename | `` `q5a_comparison_chart.png` `` |
