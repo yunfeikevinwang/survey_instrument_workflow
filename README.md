@@ -8,50 +8,38 @@ How we write, implement, and review survey instruments.
 - **Review:** PIs comment on a Google Docs copy and a Qualtrics preview.
 
 ## Components
-
-```
-instrument_v1.md      ← frozen
-instrument_v2.md      ← frozen
-instrument_v3.md      ← current version (the only file anyone edits)
-```
-
-- **Instrument files:** each `instrument_vN.md` is a complete copy of the instrument at version N. Once a version is implemented in Qualtrics, it is frozen and never edited again.
-- **Images:** all images are in one Google Drive folder, linked at the top of each instrument file. To change an image, replace the file in Drive under the same name. Earlier copies are under Drive's *File information → Manage versions*.
+- **Instrument files:** each `instrument_N.md` is a complete copy of the instrument at version N. Once a version is implemented in Qualtrics, it is frozen and never edited again.
+- **Images:** all images are in one Google Drive folder. Each `image_of_cat.png` should have a descriptive name, and updated versions should add a number to it `image_of_cat_N.png`, with the old version kept.
 
 ## Formatting rules
 
 ### The rule
-
 | Format | Meaning |
 |---|---|
-| Plain text | Visible to participants, exactly as written (including bold, italics, headings, and lists) |
-| `code` | Not visible to participants |
+| ``Plain text`` | Visible to participants|
+| `` `code` `` | Not visible to participants |
 
-Use inline code for short text and a fenced code block for longer text.
-The one exception: the Google Drive folder link at the top of each file stays a normal link, so it is clickable.
 
 ### Recommendations
-
-Use headings, lists, and other Markdown as you like.
-These conventions keep instruments consistent.
+In general, use headings,  lists, and other Markdown as you like if the meaning is clear.
 
 **Plain text (visible to participants)**
 
 | What | Recommendation | Example |
 |---|---|---|
 | Answer options | Bullets | `- Yes` |
-| Headings | `###` | `### Welcome!` |
-| Line breaks | One sentence per line, blank line between paragraphs, for precise diffs and comments | |
+| Headings | Markdown heading | `### Welcome!` |
+| Page break | Markdown horizontal line |`---`|
 
 **Code (not visible to participants)**
 
 | What | Recommendation | Example |
 |---|---|---|
-| Structure (blocks, question sub-versions) | Heading with the name in code | ``## `Block 2: AI usage` `` |
-| Question labels | Inline code | `` `Q2.` `` |
-| Logic | Inline code next to what it applies to; a fenced block for longer logic | `` `→ Skip to Block 4` `` |
-| Piped text | Inline code, as Qualtrics writes it | `` `${q://QID3/ChoiceGroup/SelectedChoices}` `` |
-| Images | Descriptive file name in inline code | `` `q5a_comparison_chart.png` `` |
+| Internal names | Markdown heading | `` `## Block 1` `` |
+| Variable | Bracketed name | `` `[Variable]` `` |
+| Logic | Plain text | `` `If true, set [Variable] = 1` `` |
+| Piped text | Plain text | ``You selected `[Variable]`.`` |
+| Images | File name in inline code | `` `q5a_comparison_chart.png` `` |
 
 Bold or italics inside code shows as literal asterisks, so don't format text in code.
 
