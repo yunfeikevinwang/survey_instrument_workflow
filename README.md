@@ -33,18 +33,25 @@ The one exception: the Google Drive folder link at the top of each file stays a 
 ### Recommendations
 
 Use headings, lists, and other Markdown as you like.
-These conventions keep instruments consistent:
+These conventions keep instruments consistent.
+
+**Plain text (visible to participants)**
 
 | What | Recommendation | Example |
 |---|---|---|
 | Answer options | Bullets | `- Yes` |
-| Heading shown to participants | `###` | `### Welcome!` |
-| Structure (blocks, question sub-versions) | Heading with the name in code | ``## `Block 2: AI usage` `` |
-| Question labels | Code | `` `Q2.` `` |
-| Logic | Inline code next to what it applies to; a fenced block for longer logic | `` `→ Skip to Block 4` `` |
-| Piped text | Code, as Qualtrics writes it | `` `${q://QID3/ChoiceGroup/SelectedChoices}` `` |
-| Images | Descriptive file name in code | `` `q5a_comparison_chart.png` `` |
+| Headings | `###` | `### Welcome!` |
 | Line breaks | One sentence per line, blank line between paragraphs, for precise diffs and comments | |
+
+**Code (not visible to participants)**
+
+| What | Recommendation | Example |
+|---|---|---|
+| Structure (blocks, question sub-versions) | Heading with the name in code | ``## `Block 2: AI usage` `` |
+| Question labels | Inline code | `` `Q2.` `` |
+| Logic | Inline code next to what it applies to; a fenced block for longer logic | `` `→ Skip to Block 4` `` |
+| Piped text | Inline code, as Qualtrics writes it | `` `${q://QID3/ChoiceGroup/SelectedChoices}` `` |
+| Images | Descriptive file name in inline code | `` `q5a_comparison_chart.png` `` |
 
 Bold or italics inside code shows as literal asterisks, so don't format text in code.
 
