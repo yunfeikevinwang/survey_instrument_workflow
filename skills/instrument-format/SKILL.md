@@ -11,7 +11,8 @@ The essentials:
 - Plain text is visible to participants. Anything else (block names, question settings, logic, piped variables, image file names) is in `code`.
 - `` ## `Name` `` is a Qualtrics block. ``##### `QID12: settings` `` starts a Qualtrics question. A new question starts as ``##### `NEW: settings` ``.
 - Answer options are the list at the end of a question; any other list is visible text.
-- A question's logic goes under its own header, never above it.
+- A question's logic goes under its own header, never above it; a short display condition goes in the header itself.
+- Survey flow is written block by block, not in one block at the top. Fence code only when it runs past three lines.
 
 ## Rules when editing
 - **Edit only the newest version.** Older `instrument_vN.md` files are frozen: they describe surveys that are already built.

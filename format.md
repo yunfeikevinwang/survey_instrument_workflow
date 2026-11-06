@@ -26,11 +26,12 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 |---|---|---|
 | Survey title | `#` header, name in code | ``# `Consumer AI Survey` `` |
 | Qualtrics block | `##` header, name in code | ``## `Consent` `` |
-| Qualtrics question | `#####` header with QID and settings, in code | ``##### `QID12: Multiple choice, select all that apply` `` |
+| Qualtrics question | `#####` header with QID and settings, in code; a short display condition goes at the end | ``##### `QID12: Multiple choice, select all that apply. Display if QID11 == Yes.` `` |
 | New question | `#####` header starting with `NEW` | ``##### `NEW: Text entry, numeric 0–168` `` |
 | Other internal headings | Any other header level, name in code | ``### `Information arm` `` |
 | Piped variable | Bracketed name, no spaces | `` This is piped: `[Variable]` `` |
-| Logic | No constraints, use code blocks for longer sections | `` `If true, set [Variable] = 1` `` |
+| Logic | Inline code, one note per line; a fenced code block only for more than three lines | `` `If true, set [Variable] = 1` `` |
+| Numeric answer options | One code line instead of a long list | `` `Choices: 1950–2025, one per year` `` |
 | Images | Use filename | `` `q5a_comparison_chart.png` `` |
 
 ## Structure
@@ -39,14 +40,12 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 # `Survey title`
 
 ```
-survey-level logic: embedded data, randomization, survey flow
+survey-wide settings: images folder, survey ID, required questions, survey options
 ```
 
 ## `Block name`
 
-```
-block-level logic (optional)
-```
+`Before this block: flow steps that run first` · `Shown if …` · `After this block: …`
 
 ##### `QID1: settings`
 
@@ -61,6 +60,8 @@ question content: text, options, images, logic
 
 - **Every Qualtrics question gets a `#####` header**, including text-only and image-only screens (`` `QID5: Text` ``). Everything up to the next header or page break belongs to that question.
 - **Logic about a question goes under its header.** A display condition written above a header belongs to the question before it.
+- **Survey flow lives with the blocks.** The top of the file holds only survey-wide settings. Each block says when it is shown. A flow step between blocks (embedded data, randomizer, web service) goes on the next block as `Before this block: …`; an end of survey goes on the block it ends as `After this block: …`.
+- **Keep code short.** Write logic as inline code, one note per line. Use a fenced block only for more than three lines, e.g. a table or a script's rules. Don't repeat what the header already says.
 - **Answer options are the list at the end of a question.** Other lists are visible text: a list followed by more text, numbered steps just before bulleted options, and any list in a `Text` question. To show a literal number that isn't a list, escape it: `1\. Click the three dots`.
 - **A bracketed note with spaces is code, not a piped variable:** `` `[show if they say yes]` ``.
 - **One question per condition.** When the survey shows different copies of a question under different conditions (iPhone and Android, control and treatment), each copy is its own question with its own condition.
