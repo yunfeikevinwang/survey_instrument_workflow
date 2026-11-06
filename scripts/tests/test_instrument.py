@@ -285,3 +285,16 @@ def test_choice_range_with_listed_choices_fails():
     md = "## `B`\n\n##### `QID1: Dropdown list`\n\n`Choices: 1–3`\n\n- 1\n"
     with pytest.raises(InstrumentError, match="line 3: .*choice range"):
         parse(md)
+
+
+def test_descending_choice_range_counts_down():
+    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n`Choices: 2025–2023, one per year`\n"
+    assert [c["text"] for c in parse(md)["questions"][0]["choices"]] == ["2025", "2024", "2023"]
+
+
+def test_format_structure_example_parses():
+    section = (REPO / "format.md").read_text().split("## Structure", 1)[1]
+    example = section.split("````", 2)[1].split("\n", 1)[1]
+    parsed = parse(example)
+    assert [b["name"] for b in parsed["blocks"]] == ["Block name"]
+    assert parsed["blocks"][0]["notes"][0].startswith("Before this block")

@@ -75,7 +75,8 @@ def parse(md: str) -> dict:
                 if question["choices"] or len(ranges) > 1:
                     raise InstrumentError(f"line {question['line']}: a choice range must be the question's only choices")
                 low, high = int(ranges[0].group(1)), int(ranges[0].group(2))
-                question["choices"] = [{"text": str(n), "notes": []} for n in range(low, high + 1)]
+                step = 1 if high >= low else -1  # year lists often run newest first
+                question["choices"] = [{"text": str(n), "notes": []} for n in range(low, high + step, step)]
             entries.clear()
         question = None
 
