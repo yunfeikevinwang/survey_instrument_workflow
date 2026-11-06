@@ -272,3 +272,16 @@ def test_bracketed_note_with_spaces_is_code():
     q1 = parse(md)["questions"][0]
     assert q1["text"] == "Swipe now, [pid]."
     assert q1["notes"] == ["[down if iPhone]"]
+
+
+def test_choice_range_note_expands_to_choices():
+    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n**Year?**\n\n`Choices: 1950–1953, one per year`\n"
+    q1 = parse(md)["questions"][0]
+    assert [c["text"] for c in q1["choices"]] == ["1950", "1951", "1952", "1953"]
+    assert q1["notes"] == ["Choices: 1950–1953, one per year"]
+
+
+def test_choice_range_with_listed_choices_fails():
+    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n`Choices: 1–3`\n\n- 1\n"
+    with pytest.raises(InstrumentError, match="line 3: .*choice range"):
+        parse(md)

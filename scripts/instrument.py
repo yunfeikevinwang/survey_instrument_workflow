@@ -20,6 +20,7 @@ RE_LIST_ITEM = re.compile(r"^\s*([-*+]|\d+[.)])\s+(.*)$")
 RE_QUESTION_ID = re.compile(r"^(QID\d+|NEW)\b:?\s*(.*)$")
 RE_PIPED = re.compile(r"^\[[^\]\s]+\]$")
 RE_TEXT_QUESTION = re.compile(r"^Text\b(?!\s+entry)", re.IGNORECASE)
+RE_CHOICE_RANGE = re.compile(r"^Choices:\s*(\d+)\s*[–-]\s*(\d+)\b")
 RE_IMAGE = re.compile(r"^[\w.\-/]+\.(png|jpe?g|gif|svg|webp)$", re.IGNORECASE)
 
 QUESTION_FIELDS = ["block", "settings", "text", "choices", "notes", "images"]
@@ -69,6 +70,12 @@ def parse(md: str) -> dict:
                     lines.append(entry[1])
             question["text"] = "\n".join(lines)
             question["choices"] = [{"text": e[1], "notes": e[2]} for e in entries[first_choice:]]
+            ranges = [m for m in map(RE_CHOICE_RANGE.match, question["notes"]) if m]
+            if ranges:
+                if question["choices"] or len(ranges) > 1:
+                    raise InstrumentError(f"line {question['line']}: a choice range must be the question's only choices")
+                low, high = int(ranges[0].group(1)), int(ranges[0].group(2))
+                question["choices"] = [{"text": str(n), "notes": []} for n in range(low, high + 1)]
             entries.clear()
         question = None
 
