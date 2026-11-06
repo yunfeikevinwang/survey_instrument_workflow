@@ -43,14 +43,14 @@ INSTRUMENT = """\
 
 ## `Consent`
 
-#### `Intro: Text [QID1]`
+##### `Intro: Text [QID1]`
 
 **Welcome** to the study.
 Hi `[pid]`!
 
 ---
 
-#### `Agree: Multiple choice [QID2]`
+##### `Agree: Multiple choice [QID2]`
 
 **Agree?**
 
@@ -59,7 +59,7 @@ Hi `[pid]`!
 
 ## `Arm`
 
-#### `ArmText: Text [QID3]`
+##### `ArmText: Text [QID3]`
 
 Arm text
 """
@@ -101,8 +101,8 @@ def test_mismatches_are_reported_by_field(dump):
 
 
 def test_missing_new_and_moved_questions(dump):
-    edited = INSTRUMENT.replace("#### `ArmText: Text [QID3]`\n\nArm text\n",
-                                "#### `New: Text [NEW]`\n\nNew text\n")
+    edited = INSTRUMENT.replace("##### `ArmText: Text [QID3]`\n\nArm text\n",
+                                "##### `New: Text [NEW]`\n\nNew text\n")
     found = {(m["qid"], m["field"]) for m in compare(parse(edited), dump)}
     assert found == {("QID3", "missing_in_instrument"), ("NEW@23", "not_implemented"), ("Arm", "pages")}
 
@@ -115,18 +115,18 @@ def test_block_membership_and_order(dump):
 
 ## `Arm`
 
-#### `ArmText: Text [QID3]`
+##### `ArmText: Text [QID3]`
 
 Arm text
 
 ## `Consent`
 
-#### `Intro: Text [QID1]`
+##### `Intro: Text [QID1]`
 
 **Welcome** to the study.
 Hi `[pid]`!
 
-#### `Agree: Multiple choice [QID2]`
+##### `Agree: Multiple choice [QID2]`
 
 **Agree?**
 
@@ -149,7 +149,7 @@ def test_helper_questions_are_ignored_unless_listed():
     timed = INSTRUMENT.replace("Page timers: none", "Page timers: every page except in: Consent")
     assert compare(parse(timed), dump) == []
 
-    listed = timed + "\n#### `Q4: Page timer [QID4]`\n"
+    listed = timed + "\n##### `Q4: Page timer [QID4]`\n"
     assert compare(parse(listed), dump) == [
         {"qid": "QID4", "field": "text", "instrument": "", "survey": "Timing"}]
 

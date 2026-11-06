@@ -111,8 +111,8 @@ def parse(md: str) -> dict:
                 raise InstrumentError(f"line {lineno}: visible text can't be a heading; "
                                       "write it as a paragraph with its style as a code note")
             level, name = len(heading.group(1)), code_heading.group(2).strip()
-            if level not in (2, 4):
-                raise InstrumentError(f"line {lineno}: only `##` and `####` headings are allowed (title and blocks, questions)")
+            if level not in (2, 5):
+                raise InstrumentError(f"line {lineno}: only `##` and `#####` headings are allowed (title and blocks, questions)")
             close_question()
             if level == 2 and result["title"] is None:
                 result["title"] = name
@@ -240,7 +240,7 @@ def assign(md: str, line: int, qid: str) -> str:
         raise InstrumentError(f"{qid} is already used")
     lines = md.split("\n")
     target = lines[line - 1] if 0 < line <= len(lines) else ""
-    if not re.match(r"^####\s+`+.*\[NEW\]`+\s*$", target):
+    if not re.match(r"^#####\s+`+.*\[NEW\]`+\s*$", target):
         raise InstrumentError(f"line {line} is not a NEW question header")
     lines[line - 1] = target.replace("[NEW]", f"[{qid}]")
     return "\n".join(lines)

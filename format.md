@@ -26,11 +26,11 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 |---|---|---|
 | Survey title | The first `##` header, name in code | ``## `Consumer AI Survey` `` |
 | Qualtrics block | `##` header, name in code | ``## `Consent` `` |
-| Qualtrics question | `####` header: label, settings, then the QID in brackets, in code; a short display condition ends the settings | ``#### `ChatbotsUsed: Multiple choice, select all that apply. Display if QID11 == Yes. [QID12]` `` |
-| New question | `####` header ending in `[NEW]` | ``#### `WeeklyHours: Text entry, numeric 0–168 [NEW]` `` |
+| Qualtrics question | `#####` header: label, settings, then the QID in brackets, in code; a short display condition ends the settings | ``##### `ChatbotsUsed: Multiple choice, select all that apply. Display if QID11 == Yes. [QID12]` `` |
+| New question | `#####` header ending in `[NEW]` | ``##### `WeeklyHours: Text entry, numeric 0–168 [NEW]` `` |
 | Page timers | One setup line: `every page`, `every page except in: A; B`, or `none` | `` `Page timers: every page` `` |
 | Piped variable | Bracketed name, no spaces | `` This is piped: `[Variable]` `` |
-| Logic | Inline code, one note per line; a fenced code block only for more than three lines | `` `If true, set [Variable] = 1` `` |
+| Logic | Inline code, one note per line, for one or two lines; three or more go in a fenced code block | `` `If true, set [Variable] = 1` `` |
 | Numeric answer options | One code line instead of a long list; a descending range counts down | `` `Choices: 1950–2025, one per year` `` |
 | Images | Use filename | `` `q5a_comparison_chart.png` `` |
 | Answer box | Code: Qualtrics draws the box from the question type | `` `_______________` `` |
@@ -53,24 +53,24 @@ Page timers: every page
 
 `After this block: …`
 
-#### `Label1: settings [QID1]`
+##### `Label1: settings [QID1]`
 
 question content: text, options, images, logic
 
 ---                      ← page break
 
-#### `Label2: settings [QID2]`
+##### `Label2: settings [QID2]`
 
 ...
 ````
 
-- **Only two heading levels:** `##` for the title and the blocks, `####` for the questions. Plain text is never a heading.
-- **Every Qualtrics question gets a `####` header**, including text-only and image-only screens (`` `Intro: Text [QID5]` ``). Everything up to the next header or page break belongs to that question.
+- **Only two heading levels:** `##` for the title and the blocks, `#####` for the questions. Plain text is never a heading.
+- **Every Qualtrics question gets a `#####` header**, including text-only and image-only screens (`` `Intro: Text [QID5]` ``). Everything up to the next header or page break belongs to that question.
 - **The label is the question's Qualtrics data export tag:** no spaces, colons or brackets, unique within the file. A new question gets one in the same style.
 - **Bold and italic are the only Markdown on plain text.** Any other styling (heading, size, colour, alignment, link) is a code note on the same line.
 - **Logic about a question goes under its header.** A display condition written above a header belongs to the question before it.
 - **Survey flow lives with the blocks.** The top of the file holds only survey-wide settings. Each block says when it is shown. A flow step between blocks (embedded data, randomizer, web service) goes on the next block as `Before this block: …`; an end of survey goes on the block it ends as `After this block: …`.
-- **Keep code short.** Write logic as inline code, one note per line. Use a fenced block only for more than three lines, e.g. a table or a script's rules. Don't repeat what the header already says.
+- **Keep code short.** Write logic as inline code, one note per line. One or two lines of code stay inline; three or more lines in a row go in a fenced block, e.g. a table or a script's rules. Don't repeat what the header already says.
 - **Answer options are the list at the end of a question.** Other lists are visible text: a list followed by more text, numbered steps just before bulleted options, and any list in a `Text` question. To show a literal number that isn't a list, escape it: `1\. Click the three dots`.
 - **A line of only `---`, `___` or `***` is always a page break.** So an answer box drawn with underscores must be code, `` `_______________` ``, never bare `___`.
 - **A bracketed note with spaces is code, not a piped variable:** `` `[show if they say yes]` ``.
