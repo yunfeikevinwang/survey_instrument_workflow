@@ -16,9 +16,10 @@ RE_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 RE_CODE_ONLY = re.compile(r"^(`+)(.+?)\1$")
 RE_CODE_SPAN = re.compile(r"(`+)(.+?)\1")
 RE_PAGE_BREAK = re.compile(r"^\s*(-{3,}|\*{3,}|_{3,})\s*$")
-RE_LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*)$")
+RE_LIST_ITEM = re.compile(r"^\s*([-*+]|\d+[.)])\s+(.*)$")
 RE_QUESTION_ID = re.compile(r"^(QID\d+|NEW)\b:?\s*(.*)$")
-RE_PIPED = re.compile(r"^\[[^\]]+\]$")
+RE_PIPED = re.compile(r"^\[[^\]\s]+\]$")
+RE_TEXT_QUESTION = re.compile(r"^Text\b(?!\s+entry)", re.IGNORECASE)
 RE_IMAGE = re.compile(r"^[\w.\-/]+\.(png|jpe?g|gif|svg|webp)$", re.IGNORECASE)
 
 QUESTION_FIELDS = ["block", "settings", "text", "choices", "notes", "images"]
@@ -48,14 +49,27 @@ def parse(md: str) -> dict:
     block = None        # current block dict
     question = None     # current question dict
     page = 0
-    text_lines: list[str] = []
+    entries: list[tuple] = []  # ("text", visible) or ("item", visible, notes, numbered), in order
     fence_start, fence_lines = None, []
 
     def close_question():
+        """Choices are the trailing run of same-style list items; other list items are text."""
         nonlocal question
         if question is not None:
-            question["text"] = "\n".join(text_lines)
-            text_lines.clear()
+            first_choice = len(entries)
+            if not RE_TEXT_QUESTION.match(question["settings"]):
+                while (first_choice > 0 and entries[first_choice - 1][0] == "item"
+                       and entries[first_choice - 1][3] == entries[-1][3]):
+                    first_choice -= 1
+            lines = []
+            for entry in entries[:first_choice]:
+                if entry[0] == "item":
+                    question["notes"].extend(entry[2])
+                if entry[1]:
+                    lines.append(entry[1])
+            question["text"] = "\n".join(lines)
+            question["choices"] = [{"text": e[1], "notes": e[2]} for e in entries[first_choice:]]
+            entries.clear()
         question = None
 
     def note_target() -> list[str]:
@@ -114,7 +128,7 @@ def parse(md: str) -> dict:
             continue
 
         item = RE_LIST_ITEM.match(line)
-        visible, notes, images = split_code(item.group(1) if item else line)
+        visible, notes, images = split_code(item.group(2) if item else line)
         if question is None:
             if visible or images or item:
                 outside(lineno)
@@ -122,11 +136,11 @@ def parse(md: str) -> dict:
             continue
         question["images"].extend(images)
         if item:
-            question["choices"].append({"text": visible, "notes": notes})
+            entries.append(("item", visible, notes, item.group(1)[0].isdigit()))
         else:
             question["notes"].extend(notes)
             if visible:
-                text_lines.append(visible)
+                entries.append(("text", visible))
 
     if fence_start is not None:
         raise InstrumentError(f"line {fence_start}: Unclosed code block")

@@ -23,6 +23,8 @@ RE_FIELD_PIPE = re.compile(r"\$\{e://Field/([^}]+)\}")
 RE_MD_STRONG = re.compile(r"(\*\*|__)(.+?)\1")
 RE_MD_EM = re.compile(r"(?<!\w)([*_])(\S(?:.*?\S)?)\1(?!\w)")
 RE_MD_HEADING = re.compile(r"^#{1,6}\s+", re.MULTILINE)
+RE_MD_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!])")
+RE_IMG = re.compile(r"<img\b", re.IGNORECASE)
 HELPER_TYPES = {"Timing", "Meta"}
 
 
@@ -40,8 +42,9 @@ def fetch(survey_id: str) -> dict:
     return body["result"]
 
 
-def clean_html(text: str) -> str:
-    text = RE_TAG.sub("", RE_LINE_BREAK.sub("\n", text or ""))
+def clean_html(text) -> str:
+    text = "" if text is None else str(text)  # choice labels can be numbers, e.g. years
+    text = RE_TAG.sub("", RE_LINE_BREAK.sub("\n", text))
     text = RE_FIELD_PIPE.sub(r"[\1]", html.unescape(text).replace("\xa0", " "))
     lines = (re.sub(r"\s+", " ", line).strip() for line in text.split("\n"))
     return "\n".join(line for line in lines if line)
@@ -49,6 +52,7 @@ def clean_html(text: str) -> str:
 
 def clean_markdown(text: str) -> str:
     text = RE_MD_EM.sub(r"\2", RE_MD_STRONG.sub(r"\2", RE_MD_HEADING.sub("", text)))
+    text = RE_MD_ESCAPE.sub(r"\1", text)
     return "\n".join(line.strip() for line in text.split("\n") if line.strip())
 
 
@@ -61,9 +65,21 @@ def flow_block_ids(nodes: list) -> list[str]:
     return ids
 
 
+def redact_web_service_headers(node):
+    """Web-service headers can hold live credentials; never write them to a dump."""
+    if isinstance(node, dict):
+        out = {k: redact_web_service_headers(v) for k, v in node.items()}
+        if node.get("Type") == "WebService" and isinstance(node.get("Headers"), list):
+            out["Headers"] = [{**h, "value": "[redacted]"} for h in node["Headers"]]
+        return out
+    if isinstance(node, list):
+        return [redact_web_service_headers(x) for x in node]
+    return node
+
+
 def normalize(definition: dict) -> dict:
     blocks_raw = definition["Blocks"]
-    flow = definition["SurveyFlow"]
+    flow = redact_web_service_headers(definition["SurveyFlow"])
     blocks, questions = [], {}
     for block_id in dict.fromkeys(flow_block_ids(flow.get("Flow", []))):
         block = blocks_raw[block_id]
@@ -88,7 +104,10 @@ def normalize(definition: dict) -> dict:
                 "answers": [clean_html(a["Display"]) for a in (q.get("Answers") or {}).values()],
                 "display_logic": q.get("DisplayLogic"),
                 "validation": q.get("Validation"),
-                "has_js": bool((q.get("QuestionJS") or "").strip()),
+                "images": len(RE_IMG.findall(q.get("QuestionText") or ""))
+                          + sum(len(RE_IMG.findall(str(c.get("Display") or "")))
+                                for c in (q.get("Choices") or {}).values()),
+                "js": (q.get("QuestionJS") or "").strip() or None,
             }
     embedded = [f["Field"] for node in flow.get("Flow", []) if node.get("Type") == "EmbeddedData"
                 for f in node.get("EmbeddedData", [])]
@@ -138,6 +157,8 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         choices = [clean_markdown(c["text"]) for c in q["choices"]]
         if choices != live["choices"]:
             report(q["id"], "choices", choices, live["choices"])
+        if len(q["images"]) != live["images"]:
+            report(q["id"], "images", q["images"], live["images"])
     for qid in dump["questions"]:
         if qid not in seen and qid not in helpers:
             report(qid, "missing_in_instrument", None, dump["questions"][qid]["text"])

@@ -142,3 +142,42 @@ def test_helper_questions_are_ignored_unless_listed():
     listed = INSTRUMENT + "\n##### `QID4: Page timer`\n"
     assert compare(parse(listed), dump) == [
         {"qid": "QID4", "field": "text", "instrument": "", "survey": "Timing"}]
+
+
+def test_non_string_choice_labels_are_kept():
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID2"] = {**DEFINITION["Questions"]["QID2"],
+                                       "Choices": {"1": {"Display": 1950}, "2": {"Display": "Yes"}}}
+    assert normalize(definition)["questions"]["QID2"]["choices"] == ["Yes", "1950"]
+
+
+def test_escaped_list_number_matches_literal_number(dump):
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID3"] = {"QuestionText": "1. Arm text", "QuestionType": "DB", "Selector": "TB"}
+    edited = INSTRUMENT.replace("\nArm text", "\n1\\. Arm text")
+    assert compare(parse(edited), normalize(definition)) == []
+
+
+def test_image_count_is_compared():
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID3"] = {"QuestionText": 'Arm text<img src="https://x/IM_1">',
+                                       "QuestionType": "DB", "Selector": "TB"}
+    dump = normalize(definition)
+    assert dump["questions"]["QID3"]["images"] == 1
+    found = {(m["qid"], m["field"]) for m in compare(parse(INSTRUMENT), dump)}
+    assert found == {("QID3", "images")}
+    with_image = INSTRUMENT.replace("\nArm text", "\n`arm.png`\n\nArm text")
+    assert compare(parse(with_image), dump) == []
+
+
+def test_dump_keeps_javascript_and_redacts_web_service_headers():
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID3"] = {**DEFINITION["Questions"]["QID3"], "QuestionJS": "alert(1)"}
+    definition["SurveyFlow"] = {"Type": "Root", "Flow": [
+        *DEFINITION["SurveyFlow"]["Flow"],
+        {"Type": "Branch", "Flow": [{"Type": "WebService", "URL": "https://api",
+                                     "Headers": [{"key": "Authorization", "value": "Basic secret"}]}]}]}
+    dump = normalize(definition)
+    assert dump["questions"]["QID3"]["js"] == "alert(1)"
+    assert "secret" not in str(dump)
+    assert dump["flow"]["Flow"][-1]["Flow"][0]["Headers"] == [{"key": "Authorization", "value": "[redacted]"}]

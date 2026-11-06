@@ -241,3 +241,34 @@ def test_assign_rejects_non_new_line_and_existing_qid():
         assign(BASIC, line=11, qid="QID9")
     with pytest.raises(InstrumentError, match="already used"):
         assign(BASIC, line=28, qid="QID1")
+
+
+# --- list items as text ------------------------------------------------------
+
+def test_list_in_text_question_is_text():
+    md = "## `B`\n\n##### `QID1: Text`\n\nYou will:\n\n- Do this.\n1. Then that.\n"
+    q1 = parse(md)["questions"][0]
+    assert q1["choices"] == []
+    assert q1["text"] == "You will:\nDo this.\nThen that."
+
+
+def test_list_followed_by_text_is_text():
+    md = ("## `B`\n\n##### `QID1: Multiple choice`\n\nThat means:\n\n- Step one\n\n"
+          "**Agree?**\n\n- Yes\n- No\n")
+    q1 = parse(md)["questions"][0]
+    assert [c["text"] for c in q1["choices"]] == ["Yes", "No"]
+    assert q1["text"] == "That means:\nStep one\n**Agree?**"
+
+
+def test_numbered_steps_before_bulleted_choice_are_text():
+    md = "## `B`\n\n##### `QID1: Multiple choice`\n\n1. Open it\n2. Delete it\n\n- I did it\n"
+    q1 = parse(md)["questions"][0]
+    assert [c["text"] for c in q1["choices"]] == ["I did it"]
+    assert q1["text"] == "Open it\nDelete it"
+
+
+def test_bracketed_note_with_spaces_is_code():
+    md = "## `B`\n\n##### `QID1: Text`\n\nSwipe `[down if iPhone]` now, `[pid]`.\n"
+    q1 = parse(md)["questions"][0]
+    assert q1["text"] == "Swipe now, [pid]."
+    assert q1["notes"] == ["[down if iPhone]"]
