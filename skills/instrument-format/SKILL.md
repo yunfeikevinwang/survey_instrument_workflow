@@ -10,6 +10,8 @@ Read `${CLAUDE_PLUGIN_ROOT}/format.md` before touching an instrument. It is the 
 The essentials:
 - Plain text is visible to participants. Anything else (block names, question settings, logic, piped variables, image file names) is in `code`.
 - `` ## `Name` `` is a Qualtrics block. ``##### `QID12: settings` `` starts a Qualtrics question. A new question starts as ``##### `NEW: settings` ``.
+- Answer options are the list at the end of a question; any other list is visible text.
+- A question's logic goes under its own header, never above it.
 
 ## Rules when editing
 - **Edit only the newest version.** Older `instrument_vN.md` files are frozen: they describe surveys that are already built.

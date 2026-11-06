@@ -19,12 +19,12 @@ S=${CLAUDE_PLUGIN_ROOT}/scripts
 python3 $S/qualtrics.py dump <SURVEY_ID> > .qualtrics/test.json
 python3 $S/qualtrics.py compare instrument_vN.md .qualtrics/test.json
 ```
-This reports block order, page breaks, block membership, visible text, choices, `NEW` questions not yet built, and questions missing on either side.
+This reports block order, page breaks, block membership, visible text, choices, image counts, `NEW` questions not yet built, and questions missing on either side. Image file names can't be checked, only how many images each question has.
 
 Text is compared after removing HTML and Markdown formatting. A text mismatch can therefore be a formatting-only difference, e.g. a line break or spacing. Say so when that's all it is.
 
 ## 2. Logic check (you)
-For each question, choice, and block with code notes, and for the setup block, find what the notes describe in the dump. The dump's `display_logic`, `validation`, and `flow` hold DisplayLogic, skip logic, randomization, embedded data, branches, and end-of-survey. The question type is in the dump's `type`. Classify each note:
+For each question, choice, and block with code notes, and for the setup block, find what the notes describe in the dump. The dump's `display_logic`, `validation`, and `flow` hold DisplayLogic, skip logic, randomization, embedded data, branches, web-service calls, and end-of-survey. Each question's JavaScript is in `js`; read it, because it often holds logic (fields set in JavaScript, answer checks, hidden buttons). The question type is in the dump's `type`. Web-service headers are redacted in the dump; never copy them anywhere. Classify each note:
 - **matches**;
 - **mismatch:** say what the survey does instead;
 - **can't verify through the API:** e.g. JavaScript behaviour or appearance.
