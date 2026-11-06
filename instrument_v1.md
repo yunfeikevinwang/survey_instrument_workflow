@@ -1,10 +1,10 @@
 # `Consumer AI Survey — Instrument v1`
 
-`Images:` [Google Drive folder](https://drive.google.com/drive/folders/REPLACE_WITH_FOLDER_ID)
-
 ```
+Images: Google Drive folder /images_v1
 Survey setup:
-- Embedded data: PROLIFIC_PID (from URL), treatment_arm (set by randomizer)
+- Set [PROLIFIC_PID] from URL
+- Randomly assign [treatment_arm] = "info" or "control" (50/50)
 - Force response on all questions unless noted
 ```
 
@@ -12,62 +12,74 @@ Survey setup:
 
 `consent_header_logo.png`
 
-### Welcome!
+### Welcome to the study
 
 This survey takes about *10 minutes*.
 Your answers are anonymous.
 
-`Q1.` **Do you agree to participate?**
+**Do you agree to participate?**
+
+`Q1: Multiple choice, single answer`
 
 - I agree
 - I do not agree `→ End of survey`
 
+---
+
 ## `Block 2: AI usage`
 
-`Show if Q1 = "I agree"`
+**Have you used an AI chatbot in the past 30 days?**
 
-`Q2.` **Have you used an AI chatbot in the past 30 days?**
+`Q2: Multiple choice, single answer`
 
 - Yes
 - No `→ Skip to Block 4`
 
-`Q3.` **Which of these chatbots have you used?** *(Select all that apply)*
+**Which of these chatbots have you used?** _(Select all that apply)_
 
-`Multiple choice, multi-select. Randomize options 1–3.`
+`Q3: Multiple choice, select all that apply. Randomize options except "Other" and "None of these".`
 
-1. ChatGPT
-2. Claude
-3. Gemini
-4. Other: `text entry box`
-5. None of these `exclusive; anchor bottom`
+- ChatGPT
+- Claude
+- Gemini
+- Other: `text entry box`
+- None of these `exclusive`
 
-`Q4.` **Roughly how many hours per week do you use `${q://QID3/ChoiceGroup/SelectedChoices}`?**
+`Set [chatbots_used] = options selected in Q3`
 
-`Numeric validation: 0–168. Store as weekly_hours.`
+---
+
+**Roughly how many hours per week do you use `[chatbots_used]`?**
+
+`Q4: Text entry, numeric 0–168. Set [weekly_hours] = answer.`
+
+---
 
 ## `Block 3: Treatment`
 
 ```
-If treatment_arm = "info":
-  Show Q5a
-Else:
-  Show Q5b
+If [treatment_arm] = "info": show Q5a
+Else: show Q5b
 ```
 
-### `Q5a (information arm)`
+### `Q5a: Information arm`
 
 Many people use **more than one** chatbot.
 Below is a short comparison.
 
 `q5a_comparison_chart.png`
 
-### `Q5b (control arm)`
+### `Q5b: Control arm`
 
 Please continue to the next page.
 
+---
+
 ## `Block 4: Demographics`
 
-`Q6.` **What is your age?**
+**What is your age?**
+
+`Q6: Multiple choice, single answer`
 
 - 18–24
 - 25–34
