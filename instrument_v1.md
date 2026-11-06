@@ -1,12 +1,10 @@
 # `Consumer AI Survey — Instrument v1`
 
-```
-Images: Google Drive folder /images_v1
-Survey setup:
-- Set [PROLIFIC_PID] from URL
-- Randomly assign [treatment_arm] = "info" or "control" (50/50)
-- Force response on all questions unless noted
-```
+`Images: Google Drive folder /images_v1`
+
+`Embedded data from the URL: PROLIFIC_PID`
+
+`Force response on all questions unless noted`
 
 ## `Consent`
 
@@ -57,14 +55,11 @@ Your answers are anonymous.
 
 ## `Treatment`
 
-```
-If [treatment_arm] = "info": show QID6
-Else: show QID7
-```
+`Before this block: randomly assign [treatment_arm] = "info" or "control" (50/50)`
 
 ### `Information arm`
 
-##### `QID6: Text`
+##### `QID6: Text. Display if [treatment_arm] == "info".`
 
 Many people use **more than one** chatbot.
 Below is a short comparison.
@@ -73,7 +68,7 @@ Below is a short comparison.
 
 ### `Control arm`
 
-##### `QID7: Text`
+##### `QID7: Text. Display if [treatment_arm] == "control".`
 
 Please continue to the next page.
 

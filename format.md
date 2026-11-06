@@ -31,7 +31,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 | Other internal headings | Any other header level, name in code | ``### `Information arm` `` |
 | Piped variable | Bracketed name, no spaces | `` This is piped: `[Variable]` `` |
 | Logic | Inline code, one note per line; a fenced code block only for more than three lines | `` `If true, set [Variable] = 1` `` |
-| Numeric answer options | One code line instead of a long list | `` `Choices: 1950–2025, one per year` `` |
+| Numeric answer options | One code line instead of a long list; a descending range counts down | `` `Choices: 1950–2025, one per year` `` |
 | Images | Use filename | `` `q5a_comparison_chart.png` `` |
 
 ## Structure
@@ -45,7 +45,11 @@ survey-wide settings: images folder, survey ID, required questions, survey optio
 
 ## `Block name`
 
-`Before this block: flow steps that run first` · `Shown if …` · `After this block: …`
+`Before this block: flow steps that run first`
+
+`Shown if …`
+
+`After this block: …`
 
 ##### `QID1: settings`
 
