@@ -127,3 +127,18 @@ Hi `[pid]`!
 """
     found = {(m["qid"], m["field"]) for m in compare(parse(edited), dump)}
     assert found == {("survey", "block_order"), ("Consent", "pages")}
+
+
+def test_helper_questions_are_ignored_unless_listed():
+    definition = {**DEFINITION, "Blocks": {**DEFINITION["Blocks"]}, "Questions": {**DEFINITION["Questions"]}}
+    definition["Blocks"]["BL_b"] = {"Type": "Standard", "Description": "Arm", "BlockElements": [
+        {"Type": "Question", "QuestionID": "QID3"}, {"Type": "Question", "QuestionID": "QID4"},
+        {"Type": "Question", "QuestionID": "QID5"}]}
+    definition["Questions"]["QID4"] = {"QuestionText": "Timing", "QuestionType": "Timing", "Selector": "PageTimer"}
+    definition["Questions"]["QID5"] = {"QuestionText": "Browser", "QuestionType": "Meta", "Selector": "Browser"}
+    dump = normalize(definition)
+    assert compare(parse(INSTRUMENT), dump) == []
+
+    listed = INSTRUMENT + "\n##### `QID4: Page timer`\n"
+    assert compare(parse(listed), dump) == [
+        {"qid": "QID4", "field": "text", "instrument": "", "survey": "Timing"}]

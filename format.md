@@ -60,6 +60,7 @@ question content: text, options, images, logic
 ````
 
 - **Every Qualtrics question gets a `#####` header**, including text-only and image-only screens (`` `QID5: Text` ``). Everything up to the next header or page break belongs to that question.
+- **Page timers and metadata questions** (Qualtrics *Timing* and *Meta* types) may be left out. They carry over when a survey is copied.
 - **New questions start as `NEW`.** After implementation, `NEW` is replaced by the real QID.
 - **QIDs are never edited by hand,** and a QID appears once per file.
 - **Visible text and images always sit inside a question.** Only code may appear between a block header and its first question.

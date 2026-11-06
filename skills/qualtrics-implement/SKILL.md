@@ -57,6 +57,7 @@ Work through `diff.json` in this order. Implement each change directly from the 
      python3 $S/instrument.py assign instrument_vN.md <line> <QID>
      ```
    - Assign from the bottom of the file upwards, so earlier line numbers stay valid.
+   - If the survey has a page timer on each page, give new pages one too, following the existing ones (type, export tag pattern).
 4. **Layout:** for every block in `pages_changed` / `reordered`, and every block that gained or lost questions, PUT the block's final `BlockElements` (questions plus `{"Type": "Page Break"}`) in a single PUT.
 5. **Questions removed:** `DELETE /questions/{qid}`.
 6. **Blocks removed:** `DELETE /blocks/{bid}`, once they're empty.

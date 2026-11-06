@@ -12,7 +12,7 @@ import json
 import os
 import re
 import sys
-import urllib.request
+import subprocess
 from pathlib import Path
 
 from instrument import parse
@@ -23,16 +23,18 @@ RE_FIELD_PIPE = re.compile(r"\$\{e://Field/([^}]+)\}")
 RE_MD_STRONG = re.compile(r"(\*\*|__)(.+?)\1")
 RE_MD_EM = re.compile(r"(?<!\w)([*_])(\S(?:.*?\S)?)\1(?!\w)")
 RE_MD_HEADING = re.compile(r"^#{1,6}\s+", re.MULTILINE)
+HELPER_TYPES = {"Timing", "Meta"}
 
 
 def fetch(survey_id: str) -> dict:
+    # curl, not urllib: python.org builds on macOS often lack CA certificates
     token, dc = os.environ["QUALTRICS_API_TOKEN"], os.environ["QUALTRICS_DATA_CENTER"]
-    request = urllib.request.Request(
-        f"https://{dc}.qualtrics.com/API/v3/survey-definitions/{survey_id}",
-        headers={"X-API-TOKEN": token},
-    )
-    with urllib.request.urlopen(request) as response:
-        body = json.loads(response.read().decode("utf-8"), strict=False)  # question HTML has control chars
+    raw = subprocess.run(
+        ["curl", "-sS", "--fail-with-body", "-H", f"X-API-TOKEN: {token}",
+         f"https://{dc}.qualtrics.com/API/v3/survey-definitions/{survey_id}"],
+        capture_output=True, check=True,
+    ).stdout
+    body = json.loads(raw.decode("utf-8"), strict=False)  # question HTML has control chars
     if not str(body["meta"]["httpStatus"]).startswith("200"):
         raise RuntimeError(f"Qualtrics returned {body['meta']}")
     return body["result"]
@@ -100,12 +102,22 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
     def report(qid, field, expected, found):
         mismatches.append({"qid": qid, "field": field, "instrument": expected, "survey": found})
 
+    # Page timers and metadata questions may be left out of the instrument
+    listed = {q["id"] for q in instrument["questions"]}
+    helpers = {qid for qid, q in dump["questions"].items()
+               if q["type"].split("/")[0] in HELPER_TYPES and qid not in listed}
+
+    def visible_pages(block: dict) -> list[list[str]]:
+        pages = ([qid for qid in page if qid not in helpers] for page in block["pages"])
+        return [page for page in pages if page]
+
     survey_blocks = {b["name"]: b for b in dump["blocks"]}
     instrument_order = [b["name"] for b in instrument["blocks"]]
     if instrument_order != [b["name"] for b in dump["blocks"]]:
         report("survey", "block_order", instrument_order, [b["name"] for b in dump["blocks"]])
     for block in instrument["blocks"]:
-        found = survey_blocks.get(block["name"], {}).get("pages")
+        survey_block = survey_blocks.get(block["name"])
+        found = visible_pages(survey_block) if survey_block else None
         if block["pages"] != found:
             report(block["name"], "pages", block["pages"], found)
 
@@ -127,7 +139,7 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         if choices != live["choices"]:
             report(q["id"], "choices", choices, live["choices"])
     for qid in dump["questions"]:
-        if qid not in seen:
+        if qid not in seen and qid not in helpers:
             report(qid, "missing_in_instrument", None, dump["questions"][qid]["text"])
     return mismatches
 
