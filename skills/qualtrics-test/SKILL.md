@@ -5,7 +5,7 @@ description: Use to check that a Qualtrics survey matches its instrument_vN.md â
 
 # Test a survey against its instrument
 
-This skill only reads. It never writes to Qualtrics, and never through a Qualtrics MCP server.
+This skill only reads, through the REST API. It never writes to Qualtrics.
 
 ## Inputs
 - `instrument_vN.md`.

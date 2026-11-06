@@ -7,7 +7,7 @@ description: Use to build version N of a survey in Qualtrics from instrument_vN.
 
 The previous version's survey is copied, and only the Markdown diff is applied to the copy. The source survey is never modified, so it doubles as the backup. Read `${CLAUDE_PLUGIN_ROOT}/format.md` and [gotchas.md](gotchas.md) before writing anything.
 
-All Qualtrics calls go through the REST API with `curl` or Python. Never use a Qualtrics MCP server.
+All Qualtrics calls go through the REST API (`curl` or Python).
 
 ## Inputs (ask for any that are missing)
 - `instrument_v(N-1).md` and `instrument_vN.md`.
