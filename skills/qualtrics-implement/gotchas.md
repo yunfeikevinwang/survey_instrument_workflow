@@ -9,7 +9,7 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 - Check `meta.httpStatus`. The `PUT /flow` and `PUT /options` responses have no `result`, so GET afterwards to verify.
 
 ## A PUT replaces the whole resource
-- **Question:** `PUT {BASE}/questions/{qid}` replaces the question with exactly the body sent. Any writable field left out is cleared, including `DataExportTag`, `DisplayLogic`, `Configuration`, `ChoiceOrder`, and `Randomization` (cleared this way on 2026-09-02).
+- **Question:** `PUT {BASE}/questions/{qid}` replaces the question with exactly the body sent. Any writable field left out is cleared, including `DataExportTag`, `DisplayLogic`, `Configuration`, `ChoiceOrder`, and `Randomization` (re-verified 2026-11-05: a text-only PUT also cleared `Validation`).
   - So always GET the question, change only the target field, and PUT a body built from this whitelist:
     `QuestionText, QuestionType, Selector, SubSelector, Configuration, QuestionDescription, Choices, ChoiceOrder, Validation, Language, DataExportTag, DisplayLogic, ChoiceDataExportTags, QuestionJS, Answers, AnswerOrder, DefaultChoices, RecodeValues, VariableNaming, SubProperties, DynamicChoices, DynamicChoicesData, Randomization`
     (drop `None` values).
@@ -50,6 +50,8 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 - Copy a survey with `POST /API/v3/surveys`, sending:
   - headers `X-COPY-SOURCE: <SV_id>` and `X-COPY-DESTINATION-OWNER: <userId>` (the user ID comes from `GET /API/v3/whoami`, at `.result.userId`);
   - body `{"projectName": "<name>"}`.
-  - The new survey's ID is in `.result`. *Not yet verified: whether QIDs are kept.* `qualtrics-implement` checks this on every copy.
+  - The new survey's ID is in `.result.id`.
+  - QIDs and block IDs are kept (verified 2026-11-05).
+- **The copy must go to the account's home data center.** Through a proxied data center, the copy headers are dropped and the call fails with `SR_1` ("both X-COPY-SOURCE and X-COPY-DESTINATION-OWNER headers are required"). Any response's `meta.notice` names the home host ("use this host instead: pdx1.qualtrics.com"). For Stanford that is `pdx1`, while `load_env.sh` gives `iad1`.
 - **Writes land in the draft. Respondent and preview links serve the last published version.** Publish with `POST {BASE}/versions` and body `{"Description": "...", "Published": true}`.
 - `PUT {BASE}/options` merges, so a key you leave out stays unchanged.
