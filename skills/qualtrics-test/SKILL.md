@@ -19,7 +19,7 @@ S=${CLAUDE_PLUGIN_ROOT}/scripts
 python3 $S/qualtrics.py dump <SURVEY_ID> > .qualtrics/test.json
 python3 $S/qualtrics.py compare instrument_vN.md .qualtrics/test.json
 ```
-This reports block order, page breaks, block membership, visible text, choices, image counts, `NEW` questions not yet built, and questions missing on either side. Image file names can't be checked, only how many images each question has.
+This reports block order, page breaks, block membership, labels (data export tags), page timers against the `Page timers:` line, visible text, choices, image counts, `NEW` questions not yet built, and questions missing on either side. Image file names can't be checked, only how many images each question has.
 
 Text is compared after removing HTML and Markdown formatting. A text mismatch can therefore be a formatting-only difference, e.g. a line break or spacing. Say so when that's all it is.
 

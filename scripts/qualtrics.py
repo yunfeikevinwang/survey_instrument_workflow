@@ -22,7 +22,6 @@ RE_LINE_BREAK = re.compile(r"<br\s*/?>|</p>|</div>", re.IGNORECASE)
 RE_FIELD_PIPE = re.compile(r"\$\{e://Field/([^}]+)\}")
 RE_MD_STRONG = re.compile(r"(\*\*|__)(.+?)\1")
 RE_MD_EM = re.compile(r"(?<!\w)([*_])(\S(?:.*?\S)?)\1(?!\w)")
-RE_MD_HEADING = re.compile(r"^#{1,6}\s+", re.MULTILINE)
 RE_MD_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!])")
 RE_IMG = re.compile(r"<img\b", re.IGNORECASE)
 HELPER_TYPES = {"Timing", "Meta"}
@@ -51,7 +50,7 @@ def clean_html(text) -> str:
 
 
 def clean_markdown(text: str) -> str:
-    text = RE_MD_EM.sub(r"\2", RE_MD_STRONG.sub(r"\2", RE_MD_HEADING.sub("", text)))
+    text = RE_MD_EM.sub(r"\2", RE_MD_STRONG.sub(r"\2", text))
     text = RE_MD_ESCAPE.sub(r"\1", text)
     return "\n".join(line.strip() for line in text.split("\n") if line.strip())
 
@@ -140,6 +139,17 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         if block["pages"] != found:
             report(block["name"], "pages", block["pages"], found)
 
+    timers = instrument["page_timers"]
+    if timers == "undeclared":
+        report("survey", "page_timers", "undeclared", None)
+    else:
+        for block in dump["blocks"]:
+            found = [any(dump["questions"][qid]["type"].startswith("Timing/") for qid in page)
+                     for page in block["pages"]]
+            timed = timers is not None and block["name"] not in timers["except"]
+            if found != [timed] * len(found):
+                report(block["name"], "page_timers", [timed] * len(found), found)
+
     seen = set()
     for q in instrument["questions"]:
         if q["id"] == "NEW":
@@ -150,6 +160,8 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         if live is None:
             report(q["id"], "missing_in_survey", q["settings"], None)
             continue
+        if q["label"] != live["export_tag"]:
+            report(q["id"], "label", q["label"], live["export_tag"])
         if q["block"] != live["block"]:
             report(q["id"], "block", q["block"], live["block"])
         if clean_markdown(q["text"]) != live["text"]:

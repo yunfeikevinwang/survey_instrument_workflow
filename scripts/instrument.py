@@ -2,7 +2,7 @@
 
   instrument.py parse FILE              structured JSON of the instrument
   instrument.py diff OLD NEW            changes between two versions, keyed by QID
-  instrument.py assign FILE LINE QID    replace the NEW question header on LINE with QID (in place)
+  instrument.py assign FILE LINE QID    replace [NEW] in the question header on LINE with [QID] (in place)
 """
 
 import argparse
@@ -17,13 +17,15 @@ RE_CODE_ONLY = re.compile(r"^(`+)(.+?)\1$")
 RE_CODE_SPAN = re.compile(r"(`+)(.+?)\1")
 RE_PAGE_BREAK = re.compile(r"^\s*(-{3,}|\*{3,}|_{3,})\s*$")
 RE_LIST_ITEM = re.compile(r"^\s*([-*+]|\d+[.)])\s+(.*)$")
-RE_QUESTION_ID = re.compile(r"^(QID\d+|NEW)\b:?\s*(.*)$")
+RE_QUESTION_HEADER = re.compile(r"^(?P<label>[^\s:\[\]]+):\s*(?P<settings>.*?)\s*\[(?P<id>QID\d+|NEW)\]$")
+RE_PAGE_TIMERS_LINE = re.compile(r"^Page timers:(.*)$", re.MULTILINE)
+RE_PAGE_TIMERS = re.compile(r"^\s*(?P<rule>none|every page(?:\s+except in:\s*(?P<blocks>.+))?)\s*$")
 RE_PIPED = re.compile(r"^\[[^\]\s]+\]$")
 RE_TEXT_QUESTION = re.compile(r"^Text\b(?!\s+entry)", re.IGNORECASE)
 RE_CHOICE_RANGE = re.compile(r"^Choices:\s*(\d+)\s*[–-]\s*(\d+)\b")
 RE_IMAGE = re.compile(r"^[\w.\-/]+\.(png|jpe?g|gif|svg|webp)$", re.IGNORECASE)
 
-QUESTION_FIELDS = ["block", "settings", "text", "choices", "notes", "images"]
+QUESTION_FIELDS = ["block", "label", "settings", "text", "choices", "notes", "images"]
 
 
 class InstrumentError(ValueError):
@@ -46,7 +48,7 @@ def split_code(text: str) -> tuple[str, list[str], list[str]]:
 
 
 def parse(md: str) -> dict:
-    result = {"title": None, "setup": [], "blocks": [], "questions": []}
+    result = {"title": None, "setup": [], "page_timers": "undeclared", "blocks": [], "questions": []}
     block = None        # current block dict
     question = None     # current question dict
     page = 0
@@ -103,11 +105,16 @@ def parse(md: str) -> dict:
             continue
 
         heading = RE_HEADING.match(line)
-        code_heading = heading and RE_CODE_ONLY.match(heading.group(2))
-        if code_heading:
+        if heading:
+            code_heading = RE_CODE_ONLY.match(heading.group(2))
+            if not code_heading:
+                raise InstrumentError(f"line {lineno}: visible text can't be a heading; "
+                                      "write it as a paragraph with its style as a code note")
             level, name = len(heading.group(1)), code_heading.group(2).strip()
+            if level not in (2, 4):
+                raise InstrumentError(f"line {lineno}: only `##` and `####` headings are allowed (title and blocks, questions)")
             close_question()
-            if level == 1 and block is None:
+            if level == 2 and result["title"] is None:
                 result["title"] = name
             elif level == 2:
                 if any(b["name"] == name for b in result["blocks"]):
@@ -115,20 +122,24 @@ def parse(md: str) -> dict:
                 block = {"name": name, "line": lineno, "notes": [], "pages": []}
                 result["blocks"].append(block)
                 page = 0
-            elif level == 5:
+            else:
                 if block is None:
                     raise InstrumentError(f"line {lineno}: question before the first block")
-                m = RE_QUESTION_ID.match(name)
+                m = RE_QUESTION_HEADER.match(name)
                 if not m:
-                    raise InstrumentError(f"line {lineno}: question header must start with QIDn or NEW: {name}")
-                qid, settings = m.groups()
+                    raise InstrumentError(f"line {lineno}: question header must be `Label: settings [QIDn]` "
+                                          f"or `Label: settings [NEW]`: {name}")
+                qid, label = m["id"], m["label"]
                 key = qid if qid != "NEW" else f"NEW@{lineno}"
                 if any(x["key"] == key for x in result["questions"]):
                     raise InstrumentError(f"line {lineno}: Duplicate {qid}")
+                if any(x["label"] == label for x in result["questions"]):
+                    raise InstrumentError(f"line {lineno}: Duplicate label '{label}'")
                 question = {"id": qid, "key": key, "line": lineno, "block": block["name"], "page": page,
-                            "settings": settings.strip(), "text": "", "choices": [], "notes": [], "images": []}
+                            "label": label, "settings": m["settings"], "text": "", "choices": [],
+                            "notes": [], "images": []}
                 result["questions"].append(question)
-            continue  # other code headings only organize the document
+            continue
 
         if RE_PAGE_BREAK.match(line):
             close_question()
@@ -154,6 +165,7 @@ def parse(md: str) -> dict:
         raise InstrumentError(f"line {fence_start}: Unclosed code block")
     close_question()
 
+    result["page_timers"] = page_timers(result)
     for b in result["blocks"]:
         pages: dict[int, list[str]] = {}
         for x in result["questions"]:
@@ -161,6 +173,26 @@ def parse(md: str) -> dict:
                 pages.setdefault(x["page"], []).append(x["key"])
         b["pages"] = [pages[p] for p in sorted(pages)]
     return result
+
+
+def page_timers(parsed: dict):
+    """The setup line `Page timers: every page [except in: A; B]` or `Page timers: none`."""
+    lines = [m.group(1) for note in parsed["setup"] for m in RE_PAGE_TIMERS_LINE.finditer(note)]
+    if not lines:
+        return "undeclared"
+    if len(lines) > 1:
+        raise InstrumentError("more than one `Page timers:` line")
+    rules = [RE_PAGE_TIMERS.match(lines[0])]
+    if not rules[0]:
+        raise InstrumentError(f"Page timers: must be `every page`, `every page except in: A; B` or `none`: {lines[0]}")
+    if rules[0]["rule"] == "none":
+        return None
+    excepted = [name.strip() for name in (rules[0]["blocks"] or "").split(";") if name.strip()]
+    names = {b["name"] for b in parsed["blocks"]}
+    for name in excepted:
+        if name not in names:
+            raise InstrumentError(f"Page timers: no block named '{name}'")
+    return {"except": excepted}
 
 
 def diff(old: dict, new: dict) -> dict:
@@ -208,9 +240,9 @@ def assign(md: str, line: int, qid: str) -> str:
         raise InstrumentError(f"{qid} is already used")
     lines = md.split("\n")
     target = lines[line - 1] if 0 < line <= len(lines) else ""
-    if not re.match(r"^#####\s+`+NEW\b", target):
+    if not re.match(r"^####\s+`+.*\[NEW\]`+\s*$", target):
         raise InstrumentError(f"line {line} is not a NEW question header")
-    lines[line - 1] = target.replace("NEW", qid, 1)
+    lines[line - 1] = target.replace("[NEW]", f"[{qid}]")
     return "\n".join(lines)
 
 

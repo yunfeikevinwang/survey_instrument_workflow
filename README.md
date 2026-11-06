@@ -24,8 +24,8 @@ A simple, AI-friendly workflow for implementing survey instruments. This repo is
 ## Instrument formatting rules
 See [format.md](format.md), with [instrument_v1.md](instrument_v1.md) as an example. In short:
 - plain text is visible to participants, and `code` is not;
-- `` ## `Name` `` is a Qualtrics block;
-- ``##### `QID12: settings` `` starts a question, and new questions use `NEW`.
+- the first `` ## `Name` `` is the title, and every later `##` is a Qualtrics block;
+- ``#### `Label: settings [QID12]` `` starts a question, and new questions end in `[NEW]`.
 
 ## Skills
 | Skill | Does |

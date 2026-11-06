@@ -22,7 +22,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
 1. **Colours.** List every run colour (`w:color w:val`) with a count and a sample of its text. Blue (e.g. `0000FF`) is logic and becomes code. If there is more than one non-black colour, ask which ones are logic before converting.
 2. **Text.**
    - Keep the wording exactly. Don't fix typos; list them for the report.
-   - Heading styles become Markdown headings. Bold and italic carry over. Numbered and bulleted paragraphs become list items.
+   - Heading styles never become Markdown headings: write the line as plain text with a `` `Heading` `` note. A doc heading that only names a section is dropped (the block header covers it). Bold and italic carry over. Numbered and bulleted paragraphs become list items.
    - Page breaks: a hard break (`w:br w:type="page"`) or a horizontal-rule shape (`o:hr="t"`, how Google Docs exports a line) becomes `---`.
    - A condition the doc writes just above a question goes under that question's header (see `format.md`).
    - Write the survey flow block by block, keep fenced code for notes longer than three lines, and collapse long numeric option lists into a `Choices:` range (see `format.md`).
@@ -32,7 +32,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
    - Name it after where it appears (`consent_logo.png`), keeping the original extension, and put it in `images_vN/`.
    - Put `` `file_name.ext` `` where the image sits in the text.
    - Report each image's pixel size (`sips -g pixelWidth -g pixelHeight`).
-4. **Structure.** Add a ``## `Block` `` header for each survey section and a ``##### `…` `` header for each question, text screen, or image screen. Write settings (question type, randomization, validation) in the header after the ID.
+4. **Structure.** The title is the first ``## `…` ``. Add a ``## `Block` `` header for each survey section and a ``#### `Label: settings [QID]` `` header for each question, text screen, or image screen. Settings are the question type, randomization and validation. If the survey is live, the label is its data export tag; otherwise write one and list it. Add a `Page timers:` line to the setup (see `format.md`).
 5. **QIDs.**
    - **Survey is live:** dump it, then give each question its QID by matching the text against the dump. Use the survey's block names for the `##` headers.
      ```bash

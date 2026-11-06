@@ -7,25 +7,26 @@ from instrument import InstrumentError, assign, diff, parse
 REPO = Path(__file__).resolve().parents[2]
 
 BASIC = """\
-# `Survey`
+## `Survey`
 
 ```
 Set [pid] from URL
+Page timers: every page except in: Demographics
 ```
 
 ## `Consent`
 
 `Block note`
 
-##### `QID1: Text`
+#### `Q1: Text [QID1]`
 
 `logo.png`
 
-### Welcome
+**Welcome** `Heading`
 
 This takes *10 minutes*.
 
-##### `QID2: Multiple choice, single answer`
+#### `Q2: Multiple choice, single answer [QID2]`
 
 **Do you agree, `[pid]`?**
 
@@ -34,15 +35,13 @@ This takes *10 minutes*.
 
 ---
 
-##### `NEW: Text entry`
+#### `New: Text entry [NEW]`
 
 **Why?**
 
 ## `Demographics`
 
-### `Age section`
-
-##### `QID3: Multiple choice`
+#### `Q3: Multiple choice [QID3]`
 
 **Age?**
 
@@ -64,20 +63,45 @@ def q(parsed, qid):
 
 def test_title_and_setup(basic):
     assert basic["title"] == "Survey"
-    assert basic["setup"] == ["Set [pid] from URL"]
+    assert basic["setup"] == ["Set [pid] from URL\nPage timers: every page except in: Demographics"]
+    assert basic["page_timers"] == {"except": ["Demographics"]}
+
+
+@pytest.mark.parametrize("line, expected", [
+    ("Page timers: every page", {"except": []}),
+    ("Page timers: none", None),
+])
+def test_page_timer_forms(line, expected):
+    parsed = parse(f"## `S`\n\n`{line}`\n\n## `B`\n")
+    assert parsed["page_timers"] == expected
+
+
+def test_undeclared_page_timers_are_unknown():
+    assert parse("## `S`\n\n## `B`\n")["page_timers"] == "undeclared"
+
+
+def test_malformed_page_timer_line_fails():
+    with pytest.raises(InstrumentError, match="must be `every page`"):
+        parse("## `S`\n\n`Page timers: every page, named Timer_x`\n\n## `B`\n")
+
+
+def test_page_timer_exception_must_name_a_block():
+    with pytest.raises(InstrumentError, match="no block named 'Nope'"):
+        parse("## `S`\n\n`Page timers: every page except in: Nope`\n\n## `B`\n")
 
 
 def test_blocks_with_notes_and_pages(basic):
     consent, demo = basic["blocks"]
     assert consent["name"] == "Consent"
     assert consent["notes"] == ["Block note"]
-    assert consent["pages"] == [["QID1", "QID2"], ["NEW@28"]]
+    assert consent["pages"] == [["QID1", "QID2"], ["NEW@29"]]
     assert demo["pages"] == [["QID3"]]
 
 
 def test_question_fields(basic):
     q2 = q(basic, "QID2")
     assert q2["block"] == "Consent"
+    assert q2["label"] == "Q2"
     assert q2["settings"] == "Multiple choice, single answer"
     assert q2["text"] == "**Do you agree, [pid]?**"
     assert q2["choices"] == [
@@ -86,17 +110,18 @@ def test_question_fields(basic):
     ]
 
 
-def test_images_and_visible_headings(basic):
+def test_images_and_styling_notes(basic):
     q1 = q(basic, "QID1")
     assert q1["images"] == ["logo.png"]
-    assert q1["text"] == "### Welcome\nThis takes *10 minutes*."
-    assert q1["notes"] == []
+    assert q1["text"] == "**Welcome**\nThis takes *10 minutes*."
+    assert q1["notes"] == ["Heading"]
 
 
 def test_new_question_keyed_by_line(basic):
     new = q(basic, "NEW")
-    assert new["key"] == "NEW@28"
-    assert new["line"] == 28
+    assert new["key"] == "NEW@29"
+    assert new["line"] == 29
+    assert new["label"] == "New"
     assert new["settings"] == "Text entry"
 
 
@@ -105,7 +130,7 @@ def test_numbered_choices(basic):
 
 
 def test_fenced_block_inside_question_is_note():
-    md = "## `B`\n\n##### `QID1: Text`\n\nHi\n\n```\nIf x\n- not a choice\n```\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Text [QID1]`\n\nHi\n\n```\nIf x\n- not a choice\n```\n"
     q1 = parse(md)["questions"][0]
     assert q1["notes"] == ["If x\n- not a choice"]
     assert q1["choices"] == []
@@ -120,13 +145,20 @@ def test_repo_sample_parses():
 @pytest.mark.parametrize(
     "md, message",
     [
-        ("## `B`\n\nVisible text\n", "outside a question"),
-        ("Visible text\n", "outside a question"),
-        ("## `B`\n\n##### `Q12: Text`\n", "must start with QIDn or NEW"),
-        ("## `B`\n\n##### `QID1: Text`\n\n##### `QID1: Text`\n", "Duplicate QID1"),
-        ("## `B`\n\n## `B`\n", "Duplicate block"),
-        ("## `B`\n\n### `Org`\n\n- option\n", "outside a question"),
-        ("## `B`\n\n```\nunclosed\n", "Unclosed code block"),
+        ("## `S`\n\n## `B`\n\nVisible text\n", "outside a question"),
+        ("## `S`\n\nVisible text\n", "outside a question"),
+        ("## `S`\n\n## `B`\n\n#### `Q12: Text`\n", "must be `Label: settings \\[QIDn\\]`"),
+        ("## `S`\n\n## `B`\n\n#### `QID12: Text`\n", "must be `Label: settings"),
+        ("## `S`\n\n## `B`\n\n#### `Text [QID12]`\n", "must be `Label: settings"),
+        ("## `S`\n\n## `B`\n\n#### `A: Text [QID1]`\n\n#### `A: Text [QID2]`\n", "Duplicate label 'A'"),
+        ("## `S`\n\n## `B`\n\n##### `Q1: Text [QID1]`\n", "only `##` and `####`"),
+        ("## `S`\n\n## `B`\n\n### `Org`\n", "only `##` and `####`"),
+        ("# `S`\n", "only `##` and `####`"),
+        ("## `S`\n\n## `B`\n\n#### `Q1: Text [QID1]`\n\n### Welcome\n", "line 7: visible text can't be a heading"),
+        ("## `S`\n\n#### `Q1: Text [QID1]`\n", "question before the first block"),
+        ("## `S`\n\n## `B`\n\n#### `Q1: Text [QID1]`\n\n#### `Q1: Text [QID1]`\n", "Duplicate QID1"),
+        ("## `S`\n\n## `B`\n\n## `B`\n", "Duplicate block"),
+        ("## `S`\n\n## `B`\n\n```\nunclosed\n", "Unclosed code block"),
     ],
 )
 def test_format_violations_fail_loudly(md, message):
@@ -137,13 +169,15 @@ def test_format_violations_fail_loudly(md, message):
 # --- diff --------------------------------------------------------------------
 
 OLD = """\
+## `S`
+
 ## `A`
 
-##### `QID1: Text`
+#### `Q1: Text [QID1]`
 
 Hello
 
-##### `QID2: Multiple choice`
+#### `Q2: Multiple choice [QID2]`
 
 **Pick**
 
@@ -152,7 +186,7 @@ Hello
 
 ## `B`
 
-##### `QID3: Text`
+#### `Q3: Text [QID3]`
 
 Bye
 """
@@ -181,44 +215,52 @@ def test_question_changes_are_reported_by_field():
 
 def test_added_removed_and_moved():
     new = """\
+## `S`
+
 ## `A`
 
-##### `QID2: Multiple choice`
+#### `Q2: Multiple choice [QID2]`
 
 **Pick**
 
 - x
 - y
 
-##### `NEW: Text`
+#### `New: Text [NEW]`
 
 Fresh
 
 ## `C`
 
-##### `QID3: Text`
+#### `Q3: Text [QID3]`
 
 Bye
 """
     d = diff(parse(OLD), parse(new))
     assert d["questions"]["removed"] == ["QID1"]
-    assert [a["key"] for a in d["questions"]["added"]] == ["NEW@10"]
+    assert [a["key"] for a in d["questions"]["added"]] == ["NEW@12"]
     assert d["questions"]["changed"] == [{"id": "QID3", "fields": {"block": {"old": "B", "new": "C"}}}]
     assert d["blocks"]["added"] == ["C"]
     assert d["blocks"]["removed"] == ["B"]
     assert d["blocks"]["pages_changed"] == ["A"]
 
 
+def test_label_change_is_reported():
+    new = OLD.replace("`Q1: Text [QID1]`", "`Hello: Text [QID1]`")
+    assert diff(parse(OLD), parse(new))["questions"]["changed"] == [
+        {"id": "QID1", "fields": {"label": {"old": "Q1", "new": "Hello"}}}]
+
+
 def test_reorder_within_block():
     new = OLD.replace(
-        "##### `QID1: Text`\n\nHello\n\n##### `QID2: Multiple choice`\n\n**Pick**\n\n- x\n- y\n",
-        "##### `QID2: Multiple choice`\n\n**Pick**\n\n- x\n- y\n\n##### `QID1: Text`\n\nHello\n",
+        "#### `Q1: Text [QID1]`\n\nHello\n\n#### `Q2: Multiple choice [QID2]`\n\n**Pick**\n\n- x\n- y\n",
+        "#### `Q2: Multiple choice [QID2]`\n\n**Pick**\n\n- x\n- y\n\n#### `Q1: Text [QID1]`\n\nHello\n",
     )
     assert diff(parse(OLD), parse(new))["blocks"]["reordered"] == ["A"]
 
 
 def test_page_break_change():
-    new = OLD.replace("##### `QID2", "---\n\n##### `QID2")
+    new = OLD.replace("#### `Q2", "---\n\n#### `Q2")
     assert diff(parse(OLD), parse(new))["blocks"]["pages_changed"] == ["A"]
 
 
@@ -231,29 +273,29 @@ def test_unknown_qid_in_new_version_fails():
 # --- assign ------------------------------------------------------------------
 
 def test_assign_replaces_new_with_qid():
-    out = assign(BASIC, line=28, qid="QID9")
-    assert "##### `QID9: Text entry`" in out
+    out = assign(BASIC, line=29, qid="QID9")
+    assert "#### `New: Text entry [QID9]`" in out
     assert q(parse(out), "QID9")["settings"] == "Text entry"
 
 
 def test_assign_rejects_non_new_line_and_existing_qid():
     with pytest.raises(InstrumentError, match="not a NEW question"):
-        assign(BASIC, line=11, qid="QID9")
+        assign(BASIC, line=20, qid="QID9")
     with pytest.raises(InstrumentError, match="already used"):
-        assign(BASIC, line=28, qid="QID1")
+        assign(BASIC, line=29, qid="QID1")
 
 
 # --- list items as text ------------------------------------------------------
 
 def test_list_in_text_question_is_text():
-    md = "## `B`\n\n##### `QID1: Text`\n\nYou will:\n\n- Do this.\n1. Then that.\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Text [QID1]`\n\nYou will:\n\n- Do this.\n1. Then that.\n"
     q1 = parse(md)["questions"][0]
     assert q1["choices"] == []
     assert q1["text"] == "You will:\nDo this.\nThen that."
 
 
 def test_list_followed_by_text_is_text():
-    md = ("## `B`\n\n##### `QID1: Multiple choice`\n\nThat means:\n\n- Step one\n\n"
+    md = ("## `S`\n\n## `B`\n\n#### `Q1: Multiple choice [QID1]`\n\nThat means:\n\n- Step one\n\n"
           "**Agree?**\n\n- Yes\n- No\n")
     q1 = parse(md)["questions"][0]
     assert [c["text"] for c in q1["choices"]] == ["Yes", "No"]
@@ -261,34 +303,34 @@ def test_list_followed_by_text_is_text():
 
 
 def test_numbered_steps_before_bulleted_choice_are_text():
-    md = "## `B`\n\n##### `QID1: Multiple choice`\n\n1. Open it\n2. Delete it\n\n- I did it\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Multiple choice [QID1]`\n\n1. Open it\n2. Delete it\n\n- I did it\n"
     q1 = parse(md)["questions"][0]
     assert [c["text"] for c in q1["choices"]] == ["I did it"]
     assert q1["text"] == "Open it\nDelete it"
 
 
 def test_bracketed_note_with_spaces_is_code():
-    md = "## `B`\n\n##### `QID1: Text`\n\nSwipe `[down if iPhone]` now, `[pid]`.\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Text [QID1]`\n\nSwipe `[down if iPhone]` now, `[pid]`.\n"
     q1 = parse(md)["questions"][0]
     assert q1["text"] == "Swipe now, [pid]."
     assert q1["notes"] == ["[down if iPhone]"]
 
 
 def test_choice_range_note_expands_to_choices():
-    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n**Year?**\n\n`Choices: 1950–1953, one per year`\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Dropdown list [QID1]`\n\n**Year?**\n\n`Choices: 1950–1953, one per year`\n"
     q1 = parse(md)["questions"][0]
     assert [c["text"] for c in q1["choices"]] == ["1950", "1951", "1952", "1953"]
     assert q1["notes"] == ["Choices: 1950–1953, one per year"]
 
 
 def test_choice_range_with_listed_choices_fails():
-    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n`Choices: 1–3`\n\n- 1\n"
-    with pytest.raises(InstrumentError, match="line 3: .*choice range"):
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Dropdown list [QID1]`\n\n`Choices: 1–3`\n\n- 1\n"
+    with pytest.raises(InstrumentError, match="line 5: .*choice range"):
         parse(md)
 
 
 def test_descending_choice_range_counts_down():
-    md = "## `B`\n\n##### `QID1: Dropdown list`\n\n`Choices: 2025–2023, one per year`\n"
+    md = "## `S`\n\n## `B`\n\n#### `Q1: Dropdown list [QID1]`\n\n`Choices: 2025–2023, one per year`\n"
     assert [c["text"] for c in parse(md)["questions"][0]["choices"]] == ["2025", "2024", "2023"]
 
 

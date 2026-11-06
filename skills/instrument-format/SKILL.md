@@ -9,7 +9,9 @@ Read `${CLAUDE_PLUGIN_ROOT}/format.md` before touching an instrument. It is the 
 
 The essentials:
 - Plain text is visible to participants. Anything else (block names, question settings, logic, piped variables, image file names) is in `code`.
-- `` ## `Name` `` is a Qualtrics block. ``##### `QID12: settings` `` starts a Qualtrics question. A new question starts as ``##### `NEW: settings` ``.
+- The first `` ## `Name` `` is the survey title; every later `##` is a Qualtrics block. ``#### `Label: settings [QID12]` `` starts a Qualtrics question, where the label is its data export tag. A new question ends in `[NEW]`. No other heading levels.
+- Plain text is never a heading. Bold and italic stay Markdown; any other style is a code note: ``**Welcome** `Heading` ``.
+- Page timers are one setup line (`Page timers: every page`), not questions.
 - Answer options are the list at the end of a question; any other list is visible text.
 - A question's logic goes under its own header, never above it; a short display condition goes in the header itself.
 - Survey flow is written block by block, not in one block at the top. Fence code only when it runs past three lines.
@@ -24,7 +26,7 @@ The essentials:
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/instrument.py parse instrument_vN.md > /dev/null
 ```
-This fails loudly on format errors and names the line: visible text outside a question, a malformed question header, a duplicate QID or block, or an unclosed code block.
+This fails loudly on format errors and names the line: visible text outside a question, a heading on visible text or at another level, a malformed question header, a duplicate QID, label or block, a malformed `Page timers:` line, or an unclosed code block.
 
 To see what changed between versions:
 ```bash
