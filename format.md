@@ -33,6 +33,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 | Logic | Inline code, one note per line; a fenced code block only for more than three lines | `` `If true, set [Variable] = 1` `` |
 | Numeric answer options | One code line instead of a long list; a descending range counts down | `` `Choices: 1950–2025, one per year` `` |
 | Images | Use filename | `` `q5a_comparison_chart.png` `` |
+| Answer box | Code: Qualtrics draws the box from the question type | `` `_______________` `` |
 
 ## Structure
 
@@ -67,6 +68,7 @@ question content: text, options, images, logic
 - **Survey flow lives with the blocks.** The top of the file holds only survey-wide settings. Each block says when it is shown. A flow step between blocks (embedded data, randomizer, web service) goes on the next block as `Before this block: …`; an end of survey goes on the block it ends as `After this block: …`.
 - **Keep code short.** Write logic as inline code, one note per line. Use a fenced block only for more than three lines, e.g. a table or a script's rules. Don't repeat what the header already says.
 - **Answer options are the list at the end of a question.** Other lists are visible text: a list followed by more text, numbered steps just before bulleted options, and any list in a `Text` question. To show a literal number that isn't a list, escape it: `1\. Click the three dots`.
+- **A line of only `---`, `___` or `***` is always a page break.** So an answer box drawn with underscores must be code, `` `_______________` ``, never bare `___`.
 - **A bracketed note with spaces is code, not a piped variable:** `` `[show if they say yes]` ``.
 - **One question per condition.** When the survey shows different copies of a question under different conditions (iPhone and Android, control and treatment), each copy is its own question with its own condition.
 - **Page timers and metadata questions** (Qualtrics *Timing* and *Meta* types) may be left out. They carry over when a survey is copied.
