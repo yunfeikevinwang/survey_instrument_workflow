@@ -1,0 +1,4 @@
+{
+  "name": "survey-instrument-workflow",
+  "description": "Write survey instruments in Markdown, implement them in Qualtrics, and fold in review feedback."
+}
