@@ -8,7 +8,9 @@ Survey setup:
 - Force response on all questions unless noted
 ```
 
-## `Block 1: Consent`
+## `Consent`
+
+##### `QID1: Text`
 
 `consent_header_logo.png`
 
@@ -17,27 +19,25 @@ Survey setup:
 This survey takes about *10 minutes*.
 Your answers are anonymous.
 
-**Do you agree to participate?**
+##### `QID2: Multiple choice, single answer`
 
-`Q1: Multiple choice, single answer`
+**Do you agree to participate?**
 
 - I agree
 - I do not agree `→ End of survey`
 
----
+## `AI usage`
 
-## `Block 2: AI usage`
+##### `QID3: Multiple choice, single answer`
 
 **Have you used an AI chatbot in the past 30 days?**
 
-`Q2: Multiple choice, single answer`
-
 - Yes
-- No `→ Skip to Block 4`
+- No `→ Skip to Demographics`
+
+##### `QID4: Multiple choice, select all that apply. Randomize options except "Other" and "None of these".`
 
 **Which of these chatbots have you used?** _(Select all that apply)_
-
-`Q3: Multiple choice, select all that apply. Randomize options except "Other" and "None of these".`
 
 - ChatGPT
 - Claude
@@ -45,41 +45,43 @@ Your answers are anonymous.
 - Other: `text entry box`
 - None of these `exclusive`
 
-`Set [chatbots_used] = options selected in Q3`
+`Set [chatbots_used] = options selected`
 
 ---
+
+##### `QID5: Text entry, numeric 0–168`
 
 **Roughly how many hours per week do you use `[chatbots_used]`?**
 
-`Q4: Text entry, numeric 0–168. Set [weekly_hours] = answer.`
+`Set [weekly_hours] = answer`
 
----
-
-## `Block 3: Treatment`
+## `Treatment`
 
 ```
-If [treatment_arm] = "info": show Q5a
-Else: show Q5b
+If [treatment_arm] = "info": show QID6
+Else: show QID7
 ```
 
-### `Q5a: Information arm`
+### `Information arm`
+
+##### `QID6: Text`
 
 Many people use **more than one** chatbot.
 Below is a short comparison.
 
 `q5a_comparison_chart.png`
 
-### `Q5b: Control arm`
+### `Control arm`
+
+##### `QID7: Text`
 
 Please continue to the next page.
 
----
+## `Demographics`
 
-## `Block 4: Demographics`
+##### `QID8: Multiple choice, single answer`
 
 **What is your age?**
-
-`Q6: Multiple choice, single answer`
 
 - 18–24
 - 25–34
