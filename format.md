@@ -17,6 +17,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 | Questions | Use bold | `**How are you?**` |
 | Answer options | Use bullets (the list at the end of a question) | `- Yes` |
 | Instructions | Use bold and italics as needed | `Please **read** this _carefully_.` |
+| Links | Markdown link on the visible words; a bare URL as `<url>` | `[Professor Salz](https://example.edu)`, `<https://chatgpt.com/>` |
 | Headings and other styling | Plain line; the style is a code note beside it (`Heading` = `<h2>`, `Subheading` = `<h3>`) | ``**Welcome to the study** `Heading` `` |
 | Page break | Use horizontal rule | `---` |
 
@@ -42,6 +43,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 
 ```
 survey-wide settings: images folder and its Drive link, survey ID, required questions, survey options
+All links open in a new tab.
 Page timers: every page
 ```
 
@@ -67,7 +69,7 @@ question content: text, options, images, logic
 - **Only two heading levels:** `##` for the title and the blocks, `#####` for the questions. Plain text is never a heading.
 - **Every Qualtrics question gets a `#####` header**, including text-only and image-only screens (`` `Intro: Text [QID5]` ``). Everything up to the next header or page break belongs to that question.
 - **The label is the question's Qualtrics data export tag:** no spaces, colons or brackets, unique within the file. A new question gets one in the same style.
-- **Bold and italic are the only Markdown on plain text.** Any other styling (heading, size, colour, alignment, link) is a code note on the same line.
+- **Bold, italic and links are the only Markdown on plain text.** Any other styling (heading, size, colour, alignment) is a code note on the same line. The setup says how links open, e.g. `All links open in a new tab.`
 - **Logic about a question goes under its header.** A display condition written above a header belongs to the question before it.
 - **Survey flow lives with the blocks.** The top of the file holds only survey-wide settings. Each block says when it is shown. A flow step between blocks (embedded data, randomizer, web service) goes on the next block as `Before this block: …`; an end of survey goes on the block it ends as `After this block: …`.
 - **Keep code short.** Write logic as inline code, one note per line. One or two lines of code stay inline; three or more lines in a row go in a fenced block, e.g. a table or a script's rules. Don't repeat what the header already says.

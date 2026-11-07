@@ -22,6 +22,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
 1. **Colours.** List every run colour (`w:color w:val`) with a count and a sample of its text. Blue (e.g. `0000FF`) is logic and becomes code. If there is more than one non-black colour, ask which ones are logic before converting.
 2. **Text.**
    - Keep the wording exactly. Don't fix typos; list them for the report.
+   - Hyperlinks become Markdown links on the same words, `[words](url)`, or `<url>` when the visible text is the URL. Add `All links open in a new tab.` to the setup if that's how they behave.
    - Heading styles never become Markdown headings: write the line as plain text with a `` `Heading` `` note. A doc heading that only names a section is dropped (the block header covers it). Bold and italic carry over. Numbered and bulleted paragraphs become list items.
    - Page breaks: a hard break (`w:br w:type="page"`) or a horizontal-rule shape (`o:hr="t"`, how Google Docs exports a line) becomes `---`.
    - A condition the doc writes just above a question goes under that question's header (see `format.md`).

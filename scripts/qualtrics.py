@@ -24,6 +24,8 @@ RE_MD_STRONG = re.compile(r"(\*\*|__)(.+?)\1")
 RE_MD_EM = re.compile(r"(?<!\w)([*_])(\S(?:.*?\S)?)\1(?!\w)")
 RE_MD_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!])")
 RE_IMG = re.compile(r"<img\b", re.IGNORECASE)
+RE_ANCHOR = re.compile(r'<a\b[^>]*?\bhref="([^"]*)"[^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
+RE_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)|<(https?://[^>\s]+)>")
 HELPER_TYPES = {"Timing", "Meta"}
 
 
@@ -49,7 +51,19 @@ def clean_html(text) -> str:
     return "\n".join(line for line in lines if line)
 
 
+def html_links(fragments: list) -> list[list[str]]:
+    return [[clean_html(label), html.unescape(href)]
+            for fragment in fragments for href, label in RE_ANCHOR.findall(str(fragment or ""))]
+
+
+def markdown_links(fragments: list[str]) -> list[list[str]]:
+    """`[text](url)` and `<url>` links, in order."""
+    return [[clean_markdown(m[1]), m[2]] if m[1] else [m[3], m[3]]
+            for fragment in fragments for m in RE_MD_LINK.finditer(fragment)]
+
+
 def clean_markdown(text: str) -> str:
+    text = RE_MD_LINK.sub(lambda m: m[1] or m[3], text)
     text = RE_MD_EM.sub(r"\2", RE_MD_STRONG.sub(r"\2", text))
     text = RE_MD_ESCAPE.sub(r"\1", text)
     return "\n".join(line.strip() for line in text.split("\n") if line.strip())
@@ -107,6 +121,8 @@ def normalize(definition: dict) -> dict:
                           + sum(len(RE_IMG.findall(str(c.get("Display") or "")))
                                 for c in (q.get("Choices") or {}).values()),
                 "js": (q.get("QuestionJS") or "").strip() or None,
+                "links": html_links([q.get("QuestionText")]
+                                    + [c.get("Display") for c in (q.get("Choices") or {}).values()]),
             }
     embedded = [f["Field"] for node in flow.get("Flow", []) if node.get("Type") == "EmbeddedData"
                 for f in node.get("EmbeddedData", [])]
@@ -169,6 +185,9 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         choices = [clean_markdown(c["text"]) for c in q["choices"]]
         if choices != live["choices"]:
             report(q["id"], "choices", choices, live["choices"])
+        links = markdown_links([q["text"]] + [c["text"] for c in q["choices"]])
+        if links != live["links"]:
+            report(q["id"], "links", links, live["links"])
         if len(q["images"]) != live["images"]:
             report(q["id"], "images", q["images"], live["images"])
     for qid in dump["questions"]:

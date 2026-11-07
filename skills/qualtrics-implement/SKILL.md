@@ -46,7 +46,7 @@ Work through `diff.json` in this order. Implement each change directly from the 
 
 1. **Blocks added:** `POST /blocks`, then fix the auto-added flow node.
 2. **Questions changed:** GET → merge → PUT, for each changed field.
-   - `text`: Markdown → HTML. `**x**` → `<strong>`, `*x*` → `<em>`, line breaks → `<br>`, a `` `Heading` `` note → `<h2>` around that line and `` `Subheading` `` → `<h3>`, a list in the question text → `<ul>`/`<ol>`, an escaped `1\.` → a literal `1.`. A piped `[Field]` → `${e://Field/Field}` for embedded data, or the matching `${q://QIDn/...}` when it refers to an answer.
+   - `text`: Markdown → HTML. `**x**` → `<strong>`, `*x*` → `<em>`, line breaks → `<br>`, `[words](url)` and `<url>` → `<a href="url">`, with `target="_blank"` when the setup says links open in a new tab, a `` `Heading` `` note → `<h2>` around that line and `` `Subheading` `` → `<h3>`, a list in the question text → `<ul>`/`<ol>`, an escaped `1\.` → a literal `1.`. A piped `[Field]` → `${e://Field/Field}` for embedded data, or the matching `${q://QIDn/...}` when it refers to an answer.
    - `choices`: edit the existing choices in place (see gotchas: choice IDs). A `Choices: A–B` note is already expanded to one choice per number by the parser.
    - `settings` and `notes`: type, validation, randomization, display logic, and skip logic, as the code describes.
    - `block`: the question moves blocks. This is handled in step 4.

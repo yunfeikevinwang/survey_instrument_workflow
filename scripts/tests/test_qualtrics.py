@@ -216,3 +216,29 @@ def test_undeclared_page_timers_are_reported(dump):
     undeclared = INSTRUMENT.replace("`Page timers: none`\n\n", "")
     assert compare(parse(undeclared), dump) == [
         {"qid": "survey", "field": "page_timers", "instrument": "undeclared", "survey": None}]
+
+
+def _with_links():
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID3"] = {
+        "QuestionText": 'Arm text by <a href="https://x.org/p" target="_blank"><strong>Prof X</strong></a>. '
+                        'Go to <a href="https://y.com/" target="_blank">https://y.com/</a>',
+        "QuestionType": "DB", "Selector": "TB", "DataExportTag": "ArmText"}
+    return normalize(definition)
+
+
+def test_dump_records_links():
+    assert _with_links()["questions"]["QID3"]["links"] == [["Prof X", "https://x.org/p"],
+                                                          ["https://y.com/", "https://y.com/"]]
+
+
+def test_markdown_links_match_live_links():
+    edited = INSTRUMENT.replace("\nArm text\n", "\nArm text by **[Prof X](https://x.org/p)**. Go to <https://y.com/>\n")
+    assert compare(parse(edited), _with_links()) == []
+
+
+def test_link_target_mismatch_is_reported():
+    edited = INSTRUMENT.replace("\nArm text\n", "\nArm text by **[Prof X](https://x.org/q)**. Go to <https://y.com/>\n")
+    assert compare(parse(edited), _with_links()) == [
+        {"qid": "QID3", "field": "links", "instrument": [["Prof X", "https://x.org/q"], ["https://y.com/", "https://y.com/"]],
+         "survey": [["Prof X", "https://x.org/p"], ["https://y.com/", "https://y.com/"]]}]

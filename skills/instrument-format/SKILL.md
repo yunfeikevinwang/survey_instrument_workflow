@@ -10,7 +10,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/format.md` before touching an instrument. It is the 
 The essentials:
 - Plain text is visible to participants. Anything else (block names, question settings, logic, piped variables, image file names) is in `code`.
 - The first `` ## `Name` `` is the survey title; every later `##` is a Qualtrics block. ``##### `Label: settings [QID12]` `` starts a Qualtrics question, where the label is its data export tag. A new question ends in `[NEW]`. No other heading levels.
-- Plain text is never a heading. Bold and italic stay Markdown; any other style is a code note: ``**Welcome** `Heading` ``.
+- Plain text is never a heading. Bold, italic and links (`[words](url)`, `<url>`) stay Markdown; any other style is a code note: ``**Welcome** `Heading` ``.
 - Page timers are one setup line (`Page timers: every page`), not questions.
 - Answer options are the list at the end of a question; any other list is visible text.
 - A question's logic goes under its own header, never above it; a short display condition goes in the header itself.

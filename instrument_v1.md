@@ -1,4 +1,4 @@
-## `Consumer AI Survey — Instrument v1`
+## `Consumer AI Survey — v1`
 
 ```
 Images: Google Drive folder /images_v1, <Drive folder link>
