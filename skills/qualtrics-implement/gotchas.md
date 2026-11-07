@@ -24,6 +24,7 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 ## Creating
 - **`POST {BASE}/blocks` appends a flow node for the new block at the end of the survey flow.** After creating blocks, GET `/flow`, remove the auto-added trailing node, and place the block where it belongs. Otherwise the block is shown twice.
 - `POST {BASE}/questions?blockId={bid}` takes the full question, including `DataExportTag` and `DisplayLogic`. The response carries the new QID.
+- **Never leave `QuestionText` empty.** A question with `""` renders the word "undefined" above its choices, and piped fields in those choices stay raw (`${e://Field/X}`). For a question with no visible text, such as a lone confirm checkbox, send `&nbsp;`. The compare reads it as empty (found by a preview walk, 2026-11-07).
 - **Question types:**
   - multiple choice: `QuestionType: "MC"` with `Selector` `SAVR` (single answer), `MAVR` (multiple answer), or `DL` (dropdown);
   - text entry: `TE` / `SL`;
