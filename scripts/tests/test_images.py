@@ -61,7 +61,7 @@ INSTRUMENT = """\
 ## `S — v1`
 
 ```
-Images: Drive Qualtrics/main_images/images_v1, https://drive.example/f; Qualtrics folder "S - v1"; 3px solid border on every image except icon_w20.png.
+Images: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder "AIMarket Main Survey 1"; 3px solid border on every image except icon_w20.png.
 Page timers: none
 ```
 
@@ -93,3 +93,22 @@ def test_registry_reuses_known_uploads_per_folder():
     registry = {"AIMarket Main Survey 1": {"a_w700.png": "IM_a"}, "Other": {"b_w250.png": "IM_b"}}
     assert to_upload(["a_w700.png", "b_w250.png"], registry, "AIMarket Main Survey 1") == ["b_w250.png"]
     assert to_upload(["a_w700.png"], {}, "New folder") == ["a_w700.png"]
+
+
+def test_question_images_are_replaced_in_the_question_text():
+    from images import replace_question_images
+    question = {"QuestionText": 'A<img src="old">', "Choices": {"1": {"Display": "Yes"}}}
+    assert replace_question_images("QID5", question, ["<img new>"]) == "A<img new>"
+
+
+def test_images_in_answer_choices_are_refused():
+    from images import replace_question_images
+    question = {"QuestionText": "Pick one", "Choices": {"1": {"Display": '<img src="x">'}}}
+    with pytest.raises(ValueError, match="QID5: images in answer choices"):
+        replace_question_images("QID5", question, ["<img new>"])
+
+
+def test_slot_count_mismatch_names_the_question():
+    from images import replace_question_images
+    with pytest.raises(ValueError, match="QID5: 0 image slots, 1 images"):
+        replace_question_images("QID5", {"QuestionText": "No slots"}, ["<img new>"])

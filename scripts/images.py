@@ -4,8 +4,8 @@
 
 The `Images:` setup line names one Qualtrics library folder per survey, shared by all its versions.
 It must already exist and have a name no other folder in the library has: the API can't create or list
-folders, and it files an upload into the first folder with that name, or into Uncategorized when there
-is none. Because folders can't be listed, a registry file (folder -> file name -> graphic id), kept in
+folders, and it files an upload into a folder with that name (which one is unpredictable when names
+repeat), or into Uncategorized when there is none. Because folders can't be listed, a registry file (folder -> file name -> graphic id), kept in
 git next to the instruments, records what each folder holds; only files missing from it are uploaded.
 File names never change meaning (a changed image gets a new name), so a registered upload is reused.
 Each question's <img> tags (and `<!-- image: … -->` placeholders) are replaced in order with tags at
@@ -69,6 +69,16 @@ def replace_image_tags(html_text: str, tags: list[str]) -> str:
     return RE_IMAGE_SLOT.sub(lambda _: next(it), html_text)
 
 
+def replace_question_images(qid: str, question: dict, tags: list[str]) -> str:
+    """The question's text with its image slots replaced; images in answer choices aren't supported."""
+    if any(RE_IMAGE_SLOT.search(str(c.get("Display") or "")) for c in (question.get("Choices") or {}).values()):
+        raise ValueError(f"{qid}: images in answer choices aren't supported; put them in the question text")
+    try:
+        return replace_image_tags(question["QuestionText"], tags)
+    except ValueError as e:
+        raise ValueError(f"{qid}: {e}") from None
+
+
 def plan_tags(parsed: dict, sizes: dict, ids: dict, base: str) -> dict:
     """QID -> the question's new <img> tags, in instrument order."""
     border = parsed["images"]["border"]
@@ -116,7 +126,10 @@ def upload(instrument: Path, survey: str, drive_root: Path, registry_path: Path,
         registry_path.write_text(json.dumps(registry, indent=1, sort_keys=True) + "\n")
     for qid, tags in plan_tags(parsed, sizes, known, api.graphic_base()).items():
         before = api.call("GET", f"/survey-definitions/{survey}/questions/{qid}")
-        new_text = replace_image_tags(before["QuestionText"], tags)
+        try:
+            new_text = replace_question_images(qid, before, tags)
+        except ValueError as e:
+            sys.exit(f"error: {e}")
         if new_text != before["QuestionText"]:
             api.put_question(survey, qid, {"QuestionText": new_text}, log)
     print(json.dumps({"folder": setup["folder"], "uploaded": uploaded, "reused": len(files) - len(uploaded)}, indent=1))

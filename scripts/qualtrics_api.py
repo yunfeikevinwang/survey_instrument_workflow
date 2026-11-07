@@ -80,4 +80,5 @@ def upload_graphic(library: str, path: str, name: str, folder: str, log: str | N
 
 
 def delete_graphic(library: str, graphic: str, log: str | None = None):
+    """For manual cleanup only: builds never delete, since earlier survey versions may use the graphic."""
     call("DELETE", f"/libraries/{library}/graphics/{graphic}", log=log, note=f"delete graphic {graphic}")

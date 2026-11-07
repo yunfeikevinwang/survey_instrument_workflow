@@ -1,6 +1,6 @@
 ---
 name: convert-legacy-instrument
-description: Use to convert an existing survey instrument exported from Google Docs or Word (.docx) into the Markdown format (instrument_vN.md) plus an images_vN/ folder ready to upload to Google Drive. Handles blue logic text, embedded images, and — when the survey is already live in Qualtrics — filling in QIDs and listing where the document disagrees with the live survey.
+description: Use to convert an existing survey instrument exported from Google Docs or Word (.docx) into the Markdown format (instrument_vN.md) plus a staging images_vN/ folder to copy into the family's Google Drive image folder. Handles blue logic text, embedded images, and — when the survey is already live in Qualtrics — filling in QIDs and listing where the document disagrees with the live survey.
 ---
 
 # Convert a legacy instrument
@@ -33,7 +33,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
    - Name it after where it appears, ending in its display width (`consent_logo_w300.png`), keeping the original extension, and put it in `images_vN/`. When the survey is live, the width is the one the live `<img>` shows; otherwise match nearby images (see `format.md`). The local `images_vN/` is a staging folder: a human copies it into the family's single Drive folder, and a name that's already there with different content must be renamed first.
    - Put `` `file_name.ext` `` where the image sits in the text.
    - Report each image's pixel size (`sips -g pixelWidth -g pixelHeight`).
-4. **Structure.** The title is the first ``## `…` ``. Add a ``## `Block` `` header for each survey section and a ``##### `Label: settings [QID]` `` header for each question, text screen, or image screen. Settings are the question type, randomization and validation. If the survey is live, the label is its data export tag; otherwise write one and list it. Add a `Page timers:` line to the setup (see `format.md`).
+4. **Structure.** The title is the first ``## `…` ``. Add a ``## `Block` `` header for each survey section and a ``##### `Label: settings [QID]` `` header for each question, text screen, or image screen. Settings are the question type, randomization and validation. If the survey is live, the label is its data export tag; otherwise write one and list it. Add a `Page timers:` line and an `Images:` line to the setup (see `format.md`). For a live survey the `Images:` line says `Qualtrics folder none`, and its border clause is read off the live `<img>` tags (`3px solid border on every image except <files without one>`); for a new survey it names the survey's Qualtrics folder.
 5. **QIDs.**
    - **Survey is live:** dump it, then give each question its QID by matching the text against the dump. Use the survey's block names for the `##` headers.
      ```bash

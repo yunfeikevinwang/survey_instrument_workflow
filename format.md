@@ -99,3 +99,5 @@ question content: text, options, images, logic
     - `Drive <path>, <link>`: the one Google Drive folder that collects every image of a family of surveys and all their versions, e.g. `Qualtrics/main_images`. The path is relative to the shared drive's root. Files there are never overwritten or renamed, because a changed image always gets a new name, so every earlier version still finds the files it used.
     - `Qualtrics folder "<name>"`: the Qualtrics library folder for this survey, shared by all its versions, e.g. `AIMarket Main Survey 1`. A human creates it once; its name must be unique in the library. A registry file next to the instruments, `qualtrics_images.json`, records which files each folder holds and their graphic ids. Write `Qualtrics folder none` for a legacy survey whose images predate this rule.
     - `<N>px solid border on every image`, optionally `except <file>, <file>` for images shown without one, or `no border`.
+
+    The parts are split on `;` and the Drive path ends at the first `,`, so neither character may appear in a path or folder name.

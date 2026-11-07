@@ -28,7 +28,7 @@ For each item, record the author, the anchor text, what it asks for, and where i
 4. **Keep the format:**
    - Never change or invent a QID.
    - New questions get `NEW`. Removed questions are deleted.
-   - A changed image needs a new file name, so flag it for whoever updates `/images_v(N+1)`.
+   - A changed image or a new width needs a new `_w` file name; flag it so a human adds the new file to the family's Drive folder.
 5. **Check the draft:**
    ```bash
    python3 ${CLAUDE_PLUGIN_ROOT}/scripts/instrument.py parse instrument_v(N+1).md > /dev/null

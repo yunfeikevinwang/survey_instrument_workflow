@@ -31,7 +31,7 @@ See [format.md](format.md), with [instrument_v1.md](instrument_v1.md) as an exam
 | Skill | Does |
 |---|---|
 | `instrument-format` | Rules for writing and editing an instrument; checks the file |
-| `convert-legacy-instrument` | Google Docs `.docx` → `instrument_vN.md` + `images_vN/` |
+| `convert-legacy-instrument` | Google Docs `.docx` → `instrument_vN.md` + staging `images_vN/` |
 | `qualtrics-implement` | Copies the v(N−1) survey, applies the diff, writes back QIDs, publishes |
 | `qualtrics-test` | Compares a live survey with its instrument (read-only) |
 | `ingest-review-feedback` | Reviewed `.docx` → draft `instrument_v(N+1).md` + decisions |

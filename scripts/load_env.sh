@@ -34,8 +34,8 @@ eval "export QUALTRICS_DATA_CENTER=\"\${${_QPREFIX}_DC:-}\""
 eval "export QUALTRICS_BRAND=\"\${${_QPREFIX}_BRAND:-}\""
 export QUALTRICS_INSTANCE="$_QUALTRICS_INSTANCE"
 
-if [ -z "$QUALTRICS_API_TOKEN" ] || [ -z "$QUALTRICS_DATA_CENTER" ]; then
-  echo "load_env.sh: ${_QPREFIX}_TOKEN / ${_QPREFIX}_DC missing in $_QSECRETS" >&2
+if [ -z "$QUALTRICS_API_TOKEN" ] || [ -z "$QUALTRICS_DATA_CENTER" ] || [ -z "$QUALTRICS_BRAND" ]; then
+  echo "load_env.sh: ${_QPREFIX}_TOKEN / ${_QPREFIX}_DC / ${_QPREFIX}_BRAND missing in $_QSECRETS" >&2
   return 1 2>/dev/null || exit 1
 fi
 

@@ -9,7 +9,6 @@ Credentials come from the environment: `source scripts/load_env.sh <instance>` f
 import argparse
 import html
 import json
-import os
 import re
 import sys
 import subprocess
@@ -33,17 +32,8 @@ HELPER_TYPES = {"Timing", "Meta"}
 
 
 def fetch(survey_id: str) -> dict:
-    # curl, not urllib: python.org builds on macOS often lack CA certificates
-    token, dc = os.environ["QUALTRICS_API_TOKEN"], os.environ["QUALTRICS_DATA_CENTER"]
-    raw = subprocess.run(
-        ["curl", "-sS", "--fail-with-body", "-H", f"X-API-TOKEN: {token}",
-         f"https://{dc}.qualtrics.com/API/v3/survey-definitions/{survey_id}"],
-        capture_output=True, check=True,
-    ).stdout
-    body = json.loads(raw.decode("utf-8"), strict=False)  # question HTML has control chars
-    if not str(body["meta"]["httpStatus"]).startswith("200"):
-        raise RuntimeError(f"Qualtrics returned {body['meta']}")
-    return body["result"]
+    from qualtrics_api import call
+    return call("GET", f"/survey-definitions/{survey_id}")
 
 
 def clean_html(text) -> str:
@@ -232,7 +222,8 @@ def compare(instrument: dict, dump: dict, pixels: dict | None = None) -> list[di
 
 def fetch_pixels(dump: dict) -> dict:
     from images import image_size
-    base = f"https://{os.environ['QUALTRICS_BRAND']}.{os.environ['QUALTRICS_DATA_CENTER']}.qualtrics.com/CP/Graphic.php?IM="
+    from qualtrics_api import graphic_base
+    base = graphic_base()
     ids = {t["im"] for q in dump["questions"].values() for t in q["images"] if t["im"]}
     return {im: image_size(subprocess.run(["curl", "-sS", "--fail", base + im], capture_output=True, check=True).stdout)
             for im in sorted(ids)}

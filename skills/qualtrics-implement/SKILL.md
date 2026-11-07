@@ -13,6 +13,7 @@ All Qualtrics calls go through the REST API (`curl` or Python).
 - `instrument_v(N-1).md` and `instrument_vN.md`.
 - The instance: `qualtrics` (Stanford) or `qualtrics-mit` (MIT).
 - The source survey: the Qualtrics project for version N−1. If the user names it rather than giving an ID, list the surveys (`GET /API/v3/surveys`, `.result.elements`) and confirm which one.
+- The local path of the shared drive's root (e.g. the Google Drive for desktop mount), so that `<root>/<Drive path>` from the `Images:` line holds the images. Only needed when the instrument uses images.
 - **First build:** if there's no previous survey, the user creates an empty survey in Qualtrics, and `instrument_v(N-1).md` is just a title line. Every question is then `NEW`.
 
 Work in `./.qualtrics/vN/`. Append one JSON line per write to `log.jsonl`, with the change, the endpoint, the status, and a note.
@@ -32,7 +33,7 @@ python3 $S/qualtrics.py compare instrument_v(N-1).md .qualtrics/vN/source.json
 Show:
 - the source survey (name and ID);
 - the new project's name: the instrument's title with ` — ` written as ` - `, e.g. `Main Survey 1 - v1`;
-- if the instrument uses images, the Qualtrics library folder its `Images:` line names. If it's the survey's first build, ask the user to create that folder; its name must be unique in the library (the API can't create or list folders, and files an upload into the first folder with that name, or into Uncategorized);
+- if the instrument uses images, the Qualtrics library folder its `Images:` line names. If it's the survey's first build, ask the user to create that folder; its name must be unique in the library (the API can't create or list folders, and files an upload into a folder with that name, unpredictably when names repeat, or into Uncategorized when none exists);
 - a summary of the diff: questions added, removed, and changed; blocks added, removed, and reordered; setup changes.
 
 Ask the user to confirm. This is the only question before the build.
@@ -47,7 +48,7 @@ Work through `diff.json` in this order. Implement each change directly from the 
 
 1. **Blocks added:** `POST /blocks`, then fix the auto-added flow node.
 2. **Questions changed:** GET → merge → PUT, for each changed field.
-   - `text`: Markdown → HTML. `**x**` → `<strong>`, `*x*` → `<em>`, line breaks → `<br>`, `[words](url)` and `<url>` → `<a href="url">`, with `target="_blank"` when the setup says links open in a new tab, a `` `Heading` `` note → `<h2>` around that line and `` `Subheading` `` → `<h3>`, a list in the question text → `<ul>`/`<ol>`, an escaped `1\.` → a literal `1.`. A piped `[Field]` → `${e://Field/Field}` for embedded data, or the matching `${q://QIDn/...}` when it refers to an answer.
+   - `text`: Markdown → HTML. `**x**` → `<strong>`, `*x*` → `<em>`, line breaks → `<br>`, `[words](url)` and `<url>` → `<a href="url">`, with `target="_blank"` when the setup says links open in a new tab, a `` `Heading` `` note → `<h2>` around that line and `` `Subheading` `` → `<h3>`, a list in the question text → `<ul>`/`<ol>`, an escaped `1\.` → a literal `1.`, and an image file name → `<!-- image: file -->` at its position (step 8 replaces it). A piped `[Field]` → `${e://Field/Field}` for embedded data, or the matching `${q://QIDn/...}` when it refers to an answer.
    - `choices`: edit the existing choices in place (see gotchas: choice IDs). A `Choices: A–B` note is already expanded to one choice per number by the parser.
    - `settings` and `notes`: type, validation, randomization, display logic, and skip logic, as the code describes.
    - `block`: the question moves blocks. This is handled in step 4.
@@ -64,10 +65,11 @@ Work through `diff.json` in this order. Implement each change directly from the 
 5. **Questions removed:** `DELETE /questions/{qid}`.
 6. **Blocks removed:** `DELETE /blocks/{bid}`, once they're empty.
 7. **Flow:** for `setup_changed`, `notes_changed`, block order, and any logic in the notes, GET `/flow`, edit it, and PUT it. This covers embedded data, branches, randomizers, end-of-survey, and block order.
-8. **Images:** when the questions are built (new questions can carry `<!-- image: file -->` placeholders where their images go), upload every image the version uses into its folder and point each question at them:
+8. **Images:** when the questions are built, upload the images the registry doesn't yet list for this folder and point every question at its images:
    ```bash
-   python3 $S/images.py upload instrument_vN.md --survey <NEW_ID> --drive-root "<local shared-drive root>"
+   python3 $S/images.py upload instrument_vN.md --survey <NEW_ID> --drive-root "<shared-drive root>" --log .qualtrics/vN/log.jsonl
    ```
+   For `Qualtrics folder none` (a legacy survey), skip this step; to add or change images there, first have a human create the survey's folder and name it in the `Images:` line. Images in answer choices aren't supported; the script stops on them.
    It uploads only files the registry (`qualtrics_images.json` next to the instruments) doesn't already list for that folder, reuses the rest, and adds the new graphic ids to the registry, which a human commits with the instrument. Never delete a graphic during a build: earlier versions of the survey may use it.
 
 When a code note is ambiguous, don't guess. Leave that change out, log it as skipped, and list it in the report.
@@ -82,6 +84,7 @@ When a code note is ambiguous, don't guess. Leave that change out, log it as ski
 - **Applied:** counts by change type.
 - **Skipped or failed:** each with the reason.
 - **QIDs assigned:** `instrument_vN.md` was edited, and a human commits it.
+- **Registry:** `qualtrics_images.json` gained N graphic ids; a human commits it with the instrument.
 - **Images:** how many were uploaded into which folder and how many were reused. Ask the user to check that the new ones are in the folder and Uncategorized gained none.
 - **Manual steps:** anything that couldn't be done through the API.
 

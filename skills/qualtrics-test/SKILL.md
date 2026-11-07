@@ -16,8 +16,9 @@ This skill only reads, through the REST API. It never writes to Qualtrics.
 ```bash
 source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <instance>
 S=${CLAUDE_PLUGIN_ROOT}/scripts
+mkdir -p .qualtrics
 python3 $S/qualtrics.py dump <SURVEY_ID> > .qualtrics/test.json
-python3 $S/qualtrics.py compare instrument_vN.md .qualtrics/test.json
+python3 $S/qualtrics.py compare instrument_vN.md .qualtrics/test.json [--pixels]
 ```
 This reports block order, page breaks, block membership, labels (data export tags), link text and targets, page timers against the `Page timers:` line, visible text, choices, images (count, each one's width against the `_w` in its file name, and its border against the `Images:` line and its exceptions; with `--pixels`, also that no image is stretched or upscaled), `NEW` questions not yet built, and questions missing on either side. Which file a graphic came from can't be checked.
 

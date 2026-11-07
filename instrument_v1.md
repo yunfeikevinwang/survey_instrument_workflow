@@ -1,7 +1,7 @@
 ## `Consumer AI Survey — v1`
 
 ```
-Images: Drive Qualtrics/consumer_ai_images/images_v1, https://drive.google.com/drive/folders/EXAMPLE; Qualtrics folder "Consumer AI Survey - v1"; 3px solid border on every image.
+Images: Drive Qualtrics/consumer_ai_images, https://drive.google.com/drive/folders/EXAMPLE; Qualtrics folder "Consumer AI Survey"; 3px solid border on every image.
 Embedded data from the URL: PROLIFIC_PID
 Force response on all questions unless noted
 Page timers: every page

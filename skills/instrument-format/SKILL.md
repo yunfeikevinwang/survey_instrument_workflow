@@ -27,7 +27,7 @@ The essentials:
 ```bash
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/instrument.py parse instrument_vN.md > /dev/null
 ```
-This fails loudly on format errors and names the line: visible text outside a question, a heading on visible text or at another level, a malformed question header, a duplicate QID, label or block, a malformed `Page timers:` line, or an unclosed code block.
+This fails loudly on format errors and names the line: visible text outside a question, a heading on visible text or at another level, a malformed question header, a duplicate QID, label or block, a malformed `Page timers:` or `Images:` line, an image file name without `_w<width>`, a table row over 80 characters, or an unclosed code block.
 
 To see what changed between versions:
 ```bash
