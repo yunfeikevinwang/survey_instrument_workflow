@@ -33,7 +33,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 | Piped variable | Bracketed name, no spaces | `` This is piped: `[Variable]` `` |
 | Logic | Inline code, one note per line, for one or two lines; three or more go in a fenced code block | `` `If true, set [Variable] = 1` `` |
 | Numeric answer options | One code line instead of a long list; a descending range counts down | `` `Choices: 1950–2025, one per year` `` |
-| Images | Use filename | `` `q5a_comparison_chart.png` `` |
+| Images | File name ending in its display width | `` `q5a_comparison_chart_w700.png` `` |
 | Answer box | Code: Qualtrics draws the box from the question type | `` `_______________` `` |
 
 ## Structure
@@ -42,7 +42,8 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 ## `Survey title`
 
 ```
-survey-wide settings: images folder and its Drive link, survey ID, required questions, survey options
+survey-wide settings: survey ID, required questions, survey options
+Images: Drive Qualtrics/<family>_images, https://drive.google.com/drive/folders/<id>; Qualtrics folder "<Project> <Survey>"; 3px solid border on every image.
 All links open in a new tab.
 Page timers: every page
 ```
@@ -92,5 +93,9 @@ question content: text, options, images, logic
 - **New questions end in `[NEW]`.** After implementation, `NEW` is replaced by the real QID.
 - **QIDs are never edited by hand,** and a QID appears once per file.
 - **Visible text and images always sit inside a question.** Only code may appear between a block header and its first question.
-- **A changed image gets a new file name,** e.g. `consent_logo_v2.png`. The file name is how a change is detected.
-- **Images live in the Google Drive folder `/images_vN`.** It holds every image used by version N. The setup's `Images:` line gives the folder name and its Drive link.
+- **An image's file name ends in its display width:** `_w<width>`, e.g. `consent_logo_w300.png`. The height is never written; it comes from the file's own pixels, so an image is never stretched, and the width may not exceed the file's pixel width. Pick the width of nearby images of the same kind (phone screenshots next to phone screenshots, desktop screenshots next to desktop screenshots), rounded to 10, 50 or 100; otherwise judge it by eye.
+- **A changed image gets a new file name,** e.g. `consent_logo_v2_w300.png`; a new width is a new name too. The file name is how a change is detected.
+- **The setup's `Images:` line names where images live and how they look,** in three parts separated by `;`:
+    - `Drive <path>, <link>`: the one Google Drive folder that collects every image of a family of surveys and all their versions, e.g. `Qualtrics/main_images`. The path is relative to the shared drive's root. Files there are never overwritten or renamed, because a changed image always gets a new name, so every earlier version still finds the files it used.
+    - `Qualtrics folder "<name>"`: the Qualtrics library folder for this survey, shared by all its versions, e.g. `AIMarket Main Survey 1`. A human creates it once; its name must be unique in the library. A registry file next to the instruments, `qualtrics_images.json`, records which files each folder holds and their graphic ids. Write `Qualtrics folder none` for a legacy survey whose images predate this rule.
+    - `<N>px solid border on every image`, optionally `except <file>, <file>` for images shown without one, or `no border`.

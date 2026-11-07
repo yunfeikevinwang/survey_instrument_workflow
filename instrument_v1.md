@@ -1,7 +1,7 @@
 ## `Consumer AI Survey — v1`
 
 ```
-Images: Google Drive folder /images_v1, <Drive folder link>
+Images: Drive Qualtrics/consumer_ai_images/images_v1, https://drive.google.com/drive/folders/EXAMPLE; Qualtrics folder "Consumer AI Survey - v1"; 3px solid border on every image.
 Embedded data from the URL: PROLIFIC_PID
 Force response on all questions unless noted
 Page timers: every page
@@ -11,7 +11,7 @@ Page timers: every page
 
 ##### `Intro: Text [QID1]`
 
-`consent_header_logo.png`
+`consent_header_logo_w300.png`
 
 **Welcome to the study** `Heading`
 
@@ -63,7 +63,7 @@ Your answers are anonymous.
 Many people use **more than one** chatbot.
 Below is a short comparison.
 
-`q5a_comparison_chart.png`
+`q5a_comparison_chart_w700.png`
 
 ##### `ControlArm: Text. Display if [treatment_arm] == "control". [QID7]`
 

@@ -49,6 +49,12 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 - Declare every embedded-data field in the `EmbeddedData` node at the top of the flow. A condition on an undeclared field quietly evaluates false.
 - Embedded data set by question JavaScript is available from the next page on.
 
+## Images
+- Upload with `POST /API/v3/libraries/{userId}/graphics`, multipart form fields `file`, `name`, `folder`. The response's `.result.id` is the graphic id (`IM_…`), served at `https://<brand>.<dc>.qualtrics.com/CP/Graphic.php?IM=<id>`.
+- **`folder` is a folder name, matched as written** (docs: "libraryFolderName"). A missing folder is not created; the graphic lands in Uncategorized with no error. A path such as `Parent/Child` is not understood. A subfolder is found by its own name, but when two folders share that name the graphic lands in whichever Qualtrics picks (seen 2026-11-06), so folder names must be unique in the library.
+- There is no call to list, create or move library folders or graphics: `GET …/graphics`, `…/folders` and `POST …/folders` all return 404.
+- `DELETE /API/v3/libraries/{userId}/graphics/{IM}` deletes a graphic; its URL then returns 404. Every survey still pointing at it shows a broken image, so a build never deletes.
+
 ## Copying and publishing
 - Copy a survey with `POST /API/v3/surveys`, sending:
   - headers `X-COPY-SOURCE: <SV_id>` and `X-COPY-DESTINATION-OWNER: <userId>` (the user ID comes from `GET /API/v3/whoami`, at `.result.userId`);

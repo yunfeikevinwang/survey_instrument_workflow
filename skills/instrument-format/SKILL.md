@@ -19,7 +19,8 @@ The essentials:
 ## Rules when editing
 - **Edit only the newest version.** Older `instrument_vN.md` files are frozen: they describe surveys that are already built.
 - **Never invent or edit a QID.** Add new questions as `NEW`. `qualtrics-implement` replaces `NEW` with the real QID.
-- **A changed image gets a new file name,** e.g. `logo.png` → `logo_v2.png`. The file name is how the change is detected. Images live in the Drive folder `/images_vN`.
+- **Image file names end in the display width,** `logo_w300.png`: match nearby images of the same kind, round to 10/50/100, never wider than the file. A changed image or width gets a new file name; that is how the change is detected.
+- **The setup's `Images:` line** gives the Drive folder and link, the Qualtrics library folder for the survey, and the border rule; see `format.md`.
 - **Starting a new version:** copy `instrument_v(N-1).md` to `instrument_vN.md` and edit the copy.
 
 ## Check the file

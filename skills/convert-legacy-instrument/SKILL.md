@@ -30,7 +30,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
    - Logic runs become inline code; adjacent logic runs merge into one span. A whole paragraph of logic becomes a code line, and several in a row become a fenced code block.
 3. **Images.**
    - Copy each file out of `word/media/` byte for byte. Never re-encode or resize.
-   - Name it after where it appears (`consent_logo.png`), keeping the original extension, and put it in `images_vN/`.
+   - Name it after where it appears, ending in its display width (`consent_logo_w300.png`), keeping the original extension, and put it in `images_vN/`. When the survey is live, the width is the one the live `<img>` shows; otherwise match nearby images (see `format.md`). The local `images_vN/` is a staging folder: a human copies it into the family's single Drive folder, and a name that's already there with different content must be renamed first.
    - Put `` `file_name.ext` `` where the image sits in the text.
    - Report each image's pixel size (`sips -g pixelWidth -g pixelHeight`).
 4. **Structure.** The title is the first ``## `…` ``. Add a ``## `Block` `` header for each survey section and a ``##### `Label: settings [QID]` `` header for each question, text screen, or image screen. Settings are the question type, randomization and validation. If the survey is live, the label is its data export tag; otherwise write one and list it. Add a `Page timers:` line to the setup (see `format.md`).

@@ -15,7 +15,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-from instrument import parse
+from instrument import image_width, parse
 
 RE_TAG = re.compile(r"<[^>]+>")
 RE_LINE_BREAK = re.compile(r"<br\s*/?>|</p>|</div>", re.IGNORECASE)
@@ -23,7 +23,10 @@ RE_FIELD_PIPE = re.compile(r"\$\{e://Field/([^}]+)\}")
 RE_MD_STRONG = re.compile(r"(\*\*|__)(.+?)\1")
 RE_MD_EM = re.compile(r"(?<!\w)([*_])(\S(?:.*?\S)?)\1(?!\w)")
 RE_MD_ESCAPE = re.compile(r"\\([\\`*_{}\[\]()#+\-.!])")
-RE_IMG = re.compile(r"<img\b", re.IGNORECASE)
+RE_IMG_TAG = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+RE_IMG_ID = re.compile(r"IM=(IM_\w+)")
+RE_STYLE_PX = r"(?<![-\w]){}\s*:\s*(\d+)px"
+RE_ATTR = r'\b{}="(\d+)"'
 RE_ANCHOR = re.compile(r'<a\b[^>]*?\bhref="([^"]*)"[^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
 RE_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)|<(https?://[^>\s]+)>")
 HELPER_TYPES = {"Timing", "Meta"}
@@ -49,6 +52,21 @@ def clean_html(text) -> str:
     text = RE_FIELD_PIPE.sub(r"[\1]", html.unescape(text).replace("\xa0", " "))
     lines = (re.sub(r"\s+", " ", line).strip() for line in text.split("\n"))
     return "\n".join(line for line in lines if line)
+
+
+def image_tags(html_text: str) -> list[dict]:
+    """Each <img>: graphic id, displayed size (style wins over attributes) and solid-border width."""
+    out = []
+    for tag in RE_IMG_TAG.findall(html_text or ""):
+        def size(name):
+            m = re.search(RE_STYLE_PX.format(name), tag) or re.search(RE_ATTR.format(name), tag)
+            return int(m.group(1)) if m else None
+        border = re.search(r"border-width\s*:\s*(\d+)px", tag)
+        solid = re.search(r"border-style\s*:\s*solid", tag)
+        im = RE_IMG_ID.search(tag)
+        out.append({"im": im.group(1) if im else None, "width": size("width"), "height": size("height"),
+                    "border_px": int(border.group(1)) if border and solid else 0})
+    return out
 
 
 def html_links(fragments: list) -> list[list[str]]:
@@ -117,9 +135,9 @@ def normalize(definition: dict) -> dict:
                 "answers": [clean_html(a["Display"]) for a in (q.get("Answers") or {}).values()],
                 "display_logic": q.get("DisplayLogic"),
                 "validation": q.get("Validation"),
-                "images": len(RE_IMG.findall(q.get("QuestionText") or ""))
-                          + sum(len(RE_IMG.findall(str(c.get("Display") or "")))
-                                for c in (q.get("Choices") or {}).values()),
+                "images": image_tags(q.get("QuestionText") or "")
+                          + [t for c in (q.get("Choices") or {}).values()
+                             for t in image_tags(str(c.get("Display") or ""))],
                 "js": (q.get("QuestionJS") or "").strip() or None,
                 "links": html_links([q.get("QuestionText")]
                                     + [c.get("Display") for c in (q.get("Choices") or {}).values()]),
@@ -130,7 +148,8 @@ def normalize(definition: dict) -> dict:
             "blocks": blocks, "questions": questions, "embedded_data": embedded, "flow": flow}
 
 
-def compare(instrument: dict, dump: dict) -> list[dict]:
+def compare(instrument: dict, dump: dict, pixels: dict | None = None) -> list[dict]:
+    """`pixels` maps graphic id -> (width, height) of the image file, to check stretching and upscaling."""
     mismatches = []
 
     def report(qid, field, expected, found):
@@ -188,12 +207,35 @@ def compare(instrument: dict, dump: dict) -> list[dict]:
         links = markdown_links([q["text"]] + [c["text"] for c in q["choices"]])
         if links != live["links"]:
             report(q["id"], "links", links, live["links"])
-        if len(q["images"]) != live["images"]:
-            report(q["id"], "images", q["images"], live["images"])
+        if len(q["images"]) != len(live["images"]):
+            report(q["id"], "images", q["images"], len(live["images"]))
+        else:
+            border = instrument["images"]["border"] if instrument["images"] else None
+            for name, tag in zip(q["images"], live["images"]):
+                want_border = border["px"] if border and name not in border["except"] else 0
+                if image_width(name) != tag["width"]:
+                    report(q["id"], "image_width", name, tag["width"])
+                if want_border != tag["border_px"]:
+                    report(q["id"], "image_border", f"{name}: {want_border}px", f"{tag['border_px']}px")
+                if pixels and tag["im"] in pixels:
+                    pw, ph = pixels[tag["im"]]
+                    if tag["width"] > pw:
+                        report(q["id"], "image_upscaled", f"{name}: file is {pw}px wide", tag["width"])
+                    elif tag["height"] is None or abs(tag["height"] - tag["width"] * ph / pw) > 2:  # Qualtrics rounds heights loosely
+                        report(q["id"], "image_stretched", f"{name}: height {round(tag['width'] * ph / pw)}",
+                               tag["height"])
     for qid in dump["questions"]:
         if qid not in seen and qid not in helpers:
             report(qid, "missing_in_instrument", None, dump["questions"][qid]["text"])
     return mismatches
+
+
+def fetch_pixels(dump: dict) -> dict:
+    from images import image_size
+    base = f"https://{os.environ['QUALTRICS_BRAND']}.{os.environ['QUALTRICS_DATA_CENTER']}.qualtrics.com/CP/Graphic.php?IM="
+    ids = {t["im"] for q in dump["questions"].values() for t in q["images"] if t["im"]}
+    return {im: image_size(subprocess.run(["curl", "-sS", "--fail", base + im], capture_output=True, check=True).stdout)
+            for im in sorted(ids)}
 
 
 def main():
@@ -203,12 +245,16 @@ def main():
     p_compare = sub.add_parser("compare")
     p_compare.add_argument("instrument", type=Path)
     p_compare.add_argument("dump", type=Path)
+    p_compare.add_argument("--pixels", action="store_true",
+                           help="download each graphic and check it is neither stretched nor upscaled")
     args = parser.parse_args()
 
     if args.command == "dump":
         out = normalize(fetch(args.survey_id))
     else:
-        out = compare(parse(args.instrument.read_text()), json.loads(args.dump.read_text()))
+        dump = json.loads(args.dump.read_text())
+        pixels = fetch_pixels(dump) if args.pixels else None
+        out = compare(parse(args.instrument.read_text()), dump, pixels)
     json.dump(out, sys.stdout, indent=2, ensure_ascii=False)
     print()
 

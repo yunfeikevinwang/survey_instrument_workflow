@@ -26,6 +26,14 @@ RE_PIPED = re.compile(r"^\[[^\]\s]+\]$")
 RE_TEXT_QUESTION = re.compile(r"^Text\b(?!\s+entry)", re.IGNORECASE)
 RE_CHOICE_RANGE = re.compile(r"^Choices:\s*(\d+)\s*[–-]\s*(\d+)\b")
 RE_IMAGE = re.compile(r"^[\w.\-/]+\.(png|jpe?g|gif|svg|webp)$", re.IGNORECASE)
+RE_IMAGE_WIDTH = re.compile(r"_w(\d+)\.[a-z]+$", re.IGNORECASE)
+RE_IMAGES_LINE = re.compile(r"^Images:(.*)$", re.MULTILINE)
+RE_IMAGES_DRIVE = re.compile(r"^Drive\s+(?P<drive>[^,]+?),\s*(?P<link>\S+)$")
+RE_IMAGES_FOLDER = re.compile(r'^Qualtrics folder\s+(?:"(?P<folder>[^"]+)"|none)$')
+RE_IMAGES_BORDER = re.compile(r"^(?:(?P<px>\d+)px solid border on every image"
+                              r"(?:\s+except\s+(?P<except>[\w\-]+(?:\.[\w\-]+)+(?:,\s*[\w\-]+(?:\.[\w\-]+)+)*))?|no border)\.?$")
+IMAGES_LINE_FORMAT = ('`Images: Drive <path>, <link>; Qualtrics folder "<name>" (or none); '
+                      '<N>px solid border on every image [except a_w20.png, b_w200.png] (or no border).`')
 
 QUESTION_FIELDS = ["block", "label", "settings", "text", "choices", "notes", "images"]
 
@@ -50,7 +58,8 @@ def split_code(text: str) -> tuple[str, list[str], list[str]]:
 
 
 def parse(md: str) -> dict:
-    result = {"title": None, "setup": [], "page_timers": "undeclared", "blocks": [], "questions": []}
+    result = {"title": None, "setup": [], "page_timers": "undeclared", "images": None,
+              "blocks": [], "questions": []}
     block = None        # current block dict
     question = None     # current question dict
     page = 0
@@ -158,6 +167,10 @@ def parse(md: str) -> dict:
                 outside(lineno)
             note_target().extend(notes)
             continue
+        for name in images:
+            if not RE_IMAGE_WIDTH.search(name):
+                raise InstrumentError(f"line {lineno}: image file name must end in _w<width>, e.g. "
+                                      f"logo_w300.png: {name}")
         question["images"].extend(images)
         if item:
             entries.append(("item", visible, notes, item.group(1)[0].isdigit()))
@@ -171,6 +184,7 @@ def parse(md: str) -> dict:
     close_question()
 
     result["page_timers"] = page_timers(result)
+    result["images"] = images_setup(result)
     for b in result["blocks"]:
         pages: dict[int, list[str]] = {}
         for x in result["questions"]:
@@ -198,6 +212,36 @@ def page_timers(parsed: dict):
         if name not in names:
             raise InstrumentError(f"Page timers: no block named '{name}'")
     return {"except": excepted}
+
+
+def image_width(name: str) -> int:
+    m = RE_IMAGE_WIDTH.search(name)
+    if not m:
+        raise InstrumentError(f"image file name must end in _w<width>: {name}")
+    return int(m.group(1))
+
+
+def images_setup(parsed: dict):
+    """The setup line naming the images' Drive folder, Qualtrics library folder and border rule."""
+    lines = [m.group(1).strip() for note in parsed["setup"] for m in RE_IMAGES_LINE.finditer(note)]
+    if not lines:
+        if any(x["images"] for x in parsed["questions"]):
+            raise InstrumentError(f"the instrument uses images but has no Images: setup line; write {IMAGES_LINE_FORMAT}")
+        return None
+    if len(lines) > 1:
+        raise InstrumentError("more than one `Images:` line")
+    parts = [p.strip() for p in lines[0].split(";")]
+    matches = [rx.match(p) for rx, p in zip((RE_IMAGES_DRIVE, RE_IMAGES_FOLDER, RE_IMAGES_BORDER), parts)]
+    if len(parts) != 3 or not all(matches):
+        raise InstrumentError(f"Images: line must read {IMAGES_LINE_FORMAT}: {lines[0]}")
+    drive, folder, border = matches
+    excepted = [x.strip() for x in (border["except"] or "").split(",") if x.strip()]
+    used = {name for x in parsed["questions"] for name in x["images"]}
+    for name in excepted:
+        if name not in used:
+            raise InstrumentError(f"Images: border exception {name} is not an image in the instrument")
+    return {"drive": drive["drive"].strip(), "link": drive["link"], "folder": folder["folder"],
+            "border": {"px": int(border["px"]), "except": excepted} if border["px"] else None}
 
 
 def diff(old: dict, new: dict) -> dict:

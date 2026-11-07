@@ -11,6 +11,7 @@ BASIC = """\
 
 ```
 Set [pid] from URL
+Images: Drive Qualtrics/main_images/images_v1, https://drive.example/f; Qualtrics folder "Survey - v1"; 3px solid border on every image.
 Page timers: every page except in: Demographics
 ```
 
@@ -20,7 +21,7 @@ Page timers: every page except in: Demographics
 
 ##### `Q1: Text [QID1]`
 
-`logo.png`
+`logo_w300.png`
 
 **Welcome** `Heading`
 
@@ -63,7 +64,7 @@ def q(parsed, qid):
 
 def test_title_and_setup(basic):
     assert basic["title"] == "Survey"
-    assert basic["setup"] == ["Set [pid] from URL\nPage timers: every page except in: Demographics"]
+    assert basic["setup"] == ["Set [pid] from URL\nImages: Drive Qualtrics/main_images/images_v1, https://drive.example/f; Qualtrics folder \"Survey - v1\"; 3px solid border on every image.\nPage timers: every page except in: Demographics"]
     assert basic["page_timers"] == {"except": ["Demographics"]}
 
 
@@ -94,7 +95,7 @@ def test_blocks_with_notes_and_pages(basic):
     consent, demo = basic["blocks"]
     assert consent["name"] == "Consent"
     assert consent["notes"] == ["Block note"]
-    assert consent["pages"] == [["QID1", "QID2"], ["NEW@29"]]
+    assert consent["pages"] == [["QID1", "QID2"], ["NEW@30"]]
     assert demo["pages"] == [["QID3"]]
 
 
@@ -112,15 +113,15 @@ def test_question_fields(basic):
 
 def test_images_and_styling_notes(basic):
     q1 = q(basic, "QID1")
-    assert q1["images"] == ["logo.png"]
+    assert q1["images"] == ["logo_w300.png"]
     assert q1["text"] == "**Welcome**\nThis takes *10 minutes*."
     assert q1["notes"] == ["Heading"]
 
 
 def test_new_question_keyed_by_line(basic):
     new = q(basic, "NEW")
-    assert new["key"] == "NEW@29"
-    assert new["line"] == 29
+    assert new["key"] == "NEW@30"
+    assert new["line"] == 30
     assert new["label"] == "New"
     assert new["settings"] == "Text entry"
 
@@ -281,7 +282,7 @@ def test_unknown_qid_in_new_version_fails():
 # --- assign ------------------------------------------------------------------
 
 def test_assign_replaces_new_with_qid():
-    out = assign(BASIC, line=29, qid="QID9")
+    out = assign(BASIC, line=30, qid="QID9")
     assert "##### `New: Text entry [QID9]`" in out
     assert q(parse(out), "QID9")["settings"] == "Text entry"
 
@@ -290,7 +291,7 @@ def test_assign_rejects_non_new_line_and_existing_qid():
     with pytest.raises(InstrumentError, match="not a NEW question"):
         assign(BASIC, line=20, qid="QID9")
     with pytest.raises(InstrumentError, match="already used"):
-        assign(BASIC, line=29, qid="QID1")
+        assign(BASIC, line=30, qid="QID1")
 
 
 # --- list items as text ------------------------------------------------------
@@ -348,3 +349,45 @@ def test_format_structure_example_parses():
     parsed = parse(example)
     assert [b["name"] for b in parsed["blocks"]] == ["Block name"]
     assert parsed["blocks"][0]["notes"][0].startswith("Before this block")
+
+
+def test_images_setup_line(basic):
+    assert basic["images"] == {"drive": "Qualtrics/main_images/images_v1", "link": "https://drive.example/f",
+                               "folder": "Survey - v1", "border": {"px": 3, "except": []}}
+
+
+def test_images_setup_line_with_no_folder_exceptions_and_no_border():
+    legacy = BASIC.replace('Qualtrics folder "Survey - v1"; 3px solid border on every image.',
+                           "Qualtrics folder none; 3px solid border on every image except logo_w300.png.")
+    assert parse(legacy)["images"]["folder"] is None
+    assert parse(legacy)["images"]["border"] == {"px": 3, "except": ["logo_w300.png"]}
+    plain = BASIC.replace("3px solid border on every image.", "no border.")
+    assert parse(plain)["images"]["border"] is None
+
+
+def test_image_width_comes_from_the_file_name():
+    from instrument import image_width
+    assert image_width("google_phone_carrot_w250.png") == 250
+    with pytest.raises(InstrumentError):
+        image_width("logo.png")
+
+
+def test_image_without_width_is_an_error():
+    with pytest.raises(InstrumentError, match="_w<width>"):
+        parse(BASIC.replace("logo_w300.png", "logo.png"))
+
+
+def test_images_need_the_setup_line():
+    no_line = "\n".join(l for l in BASIC.split("\n") if not l.startswith("Images:"))
+    with pytest.raises(InstrumentError, match="Images:"):
+        parse(no_line)
+
+
+def test_malformed_images_line_is_an_error():
+    with pytest.raises(InstrumentError, match="Images:"):
+        parse(BASIC.replace("Qualtrics folder", "Folder"))
+
+
+def test_border_exception_must_be_an_image_in_the_instrument():
+    with pytest.raises(InstrumentError, match="other_w20.png"):
+        parse(BASIC.replace("every image.", "every image except other_w20.png."))

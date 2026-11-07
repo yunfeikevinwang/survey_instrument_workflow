@@ -31,7 +31,8 @@ python3 $S/qualtrics.py compare instrument_v(N-1).md .qualtrics/vN/source.json
 ## 2. Confirm once
 Show:
 - the source survey (name and ID);
-- the new project's name, `<source name minus version> vN`;
+- the new project's name: the instrument's title with ` — ` written as ` - `, e.g. `Main Survey 1 - v1`;
+- if the instrument uses images, the Qualtrics library folder its `Images:` line names. If it's the survey's first build, ask the user to create that folder; its name must be unique in the library (the API can't create or list folders, and files an upload into the first folder with that name, or into Uncategorized);
 - a summary of the diff: questions added, removed, and changed; blocks added, removed, and reordered; setup changes.
 
 Ask the user to confirm. This is the only question before the build.
@@ -63,11 +64,16 @@ Work through `diff.json` in this order. Implement each change directly from the 
 5. **Questions removed:** `DELETE /questions/{qid}`.
 6. **Blocks removed:** `DELETE /blocks/{bid}`, once they're empty.
 7. **Flow:** for `setup_changed`, `notes_changed`, block order, and any logic in the notes, GET `/flow`, edit it, and PUT it. This covers embedded data, branches, randomizers, end-of-survey, and block order.
+8. **Images:** when the questions are built (new questions can carry `<!-- image: file -->` placeholders where their images go), upload every image the version uses into its folder and point each question at them:
+   ```bash
+   python3 $S/images.py upload instrument_vN.md --survey <NEW_ID> --drive-root "<local shared-drive root>"
+   ```
+   It uploads only files the registry (`qualtrics_images.json` next to the instruments) doesn't already list for that folder, reuses the rest, and adds the new graphic ids to the registry, which a human commits with the instrument. Never delete a graphic during a build: earlier versions of the survey may use it.
 
 When a code note is ambiguous, don't guess. Leave that change out, log it as skipped, and list it in the report.
 
 ## 5. Verify, then publish
-- Run `qualtrics-test` on the copy against `instrument_vN.md`, and fix mismatches that come from this build.
+- Run `qualtrics-test` on the copy against `instrument_vN.md` (with `--pixels` when images were uploaded), and fix mismatches that come from this build.
 - `qualtrics.py compare` does not check DisplayLogic or the flow. GET every question whose logic you wrote and the whole `/flow` after the PUT, and compare them with what you sent.
 - Then publish: `POST {BASE}/versions` with `{"Description": "Instrument vN", "Published": true}`.
 
@@ -76,7 +82,8 @@ When a code note is ambiguous, don't guess. Leave that change out, log it as ski
 - **Applied:** counts by change type.
 - **Skipped or failed:** each with the reason.
 - **QIDs assigned:** `instrument_vN.md` was edited, and a human commits it.
-- **Manual steps:** the API can't upload images, so list each question whose image is new or renamed, with its file from `/images_vN`. Also list anything else that couldn't be done through the API.
+- **Images:** how many were uploaded into which folder and how many were reused. Ask the user to check that the new ones are in the folder and Uncategorized gained none.
+- **Manual steps:** anything that couldn't be done through the API.
 
 ## API endpoints
 | Operation | Call |
@@ -87,3 +94,4 @@ When a code note is ambiguous, don't guess. Leave that change out, log it as ski
 | Flow | `GET` / `PUT {BASE}/flow` |
 | Publish | `POST {BASE}/versions` |
 | Copy survey / who am I | `POST /API/v3/surveys` (copy headers), `GET /API/v3/whoami` |
+| Library graphic | `POST /API/v3/libraries/{userId}/graphics` (multipart `file`, `name`, `folder`), `DELETE …/graphics/{IM}` |

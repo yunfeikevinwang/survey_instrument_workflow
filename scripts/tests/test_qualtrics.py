@@ -168,16 +168,51 @@ def test_escaped_list_number_matches_literal_number(dump):
     assert compare(parse(edited), normalize(definition)) == []
 
 
-def test_image_count_is_compared():
+def with_arm_html(html):
     definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
-    definition["Questions"]["QID3"] = {"QuestionText": 'Arm text<img src="https://x/IM_1">',
-                                       "QuestionType": "DB", "Selector": "TB", "DataExportTag": "ArmText"}
-    dump = normalize(definition)
-    assert dump["questions"]["QID3"]["images"] == 1
+    definition["Questions"]["QID3"] = {"QuestionText": html, "QuestionType": "DB", "Selector": "TB",
+                                       "DataExportTag": "ArmText"}
+    return normalize(definition)
+
+
+IMAGES_SETUP = ('`Images: Drive Qualtrics/x/images_v1, https://d/f; Qualtrics folder "S - v1"; '
+                '3px solid border on every image.`')
+BORDERED = ('Arm text<img src="https://x/?IM=IM_1" width="250" height="544" '
+            'style="width: 250px; height: 544px; border-width: 3px; border-style: solid;">')
+
+
+def with_image(name="arm_w250.png", setup=IMAGES_SETUP):
+    return (INSTRUMENT.replace("`Page timers: none`", f"`Page timers: none`\n\n{setup}")
+            .replace("\nArm text", f"\n`{name}`\n\nArm text"))
+
+
+def test_dump_records_each_image():
+    dump = with_arm_html(BORDERED)
+    assert dump["questions"]["QID3"]["images"] == [{"im": "IM_1", "width": 250, "height": 544, "border_px": 3}]
+
+
+def test_image_count_is_compared():
+    dump = with_arm_html(BORDERED)
     found = {(m["qid"], m["field"]) for m in compare(parse(INSTRUMENT), dump)}
     assert found == {("QID3", "images")}
-    with_image = INSTRUMENT.replace("\nArm text", "\n`arm.png`\n\nArm text")
-    assert compare(parse(with_image), dump) == []
+    assert compare(parse(with_image()), dump) == []
+
+
+def test_image_width_and_border_are_compared():
+    dump = with_arm_html(BORDERED.replace("border-width: 3px; border-style: solid;", ""))
+    found = {(m["qid"], m["field"]) for m in compare(parse(with_image("arm_w300.png")), dump)}
+    assert found == {("QID3", "image_width"), ("QID3", "image_border")}
+    excepted = IMAGES_SETUP.replace("every image.", "every image except arm_w250.png.")
+    assert compare(parse(with_image(setup=excepted)), dump) == []
+
+
+def test_pixels_catch_stretching_and_upscaling():
+    dump = with_arm_html(BORDERED)
+    assert compare(parse(with_image()), dump, pixels={"IM_1": (942, 2048)}) == []
+    found = {m["field"] for m in compare(parse(with_image()), dump, pixels={"IM_1": (942, 1000)})}
+    assert found == {"image_stretched"}
+    found = {m["field"] for m in compare(parse(with_image()), dump, pixels={"IM_1": (200, 435)})}
+    assert found == {"image_upscaled"}
 
 
 def test_dump_keeps_javascript_and_redacts_web_service_headers():

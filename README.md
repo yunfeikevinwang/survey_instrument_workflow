@@ -4,7 +4,7 @@ A simple, AI-friendly workflow for implementing survey instruments. This repo is
 ## Basic components
 1. **Instrument and images:** the instrument is in Markdown on GitHub; images are in a Google Drive folder.
     - Each `instrument_vN.md` is a complete copy of the instrument for version N.
-    - Each image has a descriptive name. The Google Drive folder `/images_vN` contains all images needed in version N.
+    - Each image has a descriptive name ending in its display width (`_w300`). One Google Drive folder per family of surveys collects every image of every version (a changed image gets a new name, so nothing is overwritten), and the build uploads each survey's images once into that survey's Qualtrics library folder.
 2. **Implementation:** built in Qualtrics from the Markdown using AI.
     - Each implementation on Qualtrics is a separate project for version N, copied from version N−1.
 3. **Review document:** humans comment on a Google Docs copy of the instrument and implementation.
@@ -14,7 +14,7 @@ A simple, AI-friendly workflow for implementing survey instruments. This repo is
 
 1. **Create instrument and images.** AI and humans create version N of the instrument and images. *(skill: `instrument-format` and `convert-legacy-instrument`)*
 2. **Implement.** AI copies the version N−1 Qualtrics project and applies the changes between `instrument_v(N-1).md` and `instrument_vN.md`. New questions get their QIDs written into `instrument_vN.md`. A human checks everything for correctness, formatting, and maintainable logic. At this point, it is okay to tweak the new instrument to make sure things are fully specified and match. *(skills: `qualtrics-implement`, `qualtrics-test`)*
-3. **Review.** Now, `instrument_vN.md`, `/images_vN`, and the implementation are _frozen_. Based on the implementation, PIs leave comments and suggested edits on the instrument uploaded to Google Docs.
+3. **Review.** Now, `instrument_vN.md`, the images it names, and the implementation are _frozen_. Based on the implementation, PIs leave comments and suggested edits on the instrument uploaded to Google Docs.
 4. **Update instrument and images.** Now the review document is _frozen_. Download the comments and suggestions as a Word document. AI and humans read it and draft `instrument_v(N+1).md`. *(skill: `ingest-review-feedback`)*
 
 **Getting started:**
