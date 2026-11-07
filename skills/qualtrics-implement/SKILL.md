@@ -75,7 +75,7 @@ Work through `diff.json` in this order. Implement each change directly from the 
 When a code note is ambiguous, don't guess. Leave that change out, log it as skipped, and list it in the report.
 
 ## 5. Verify, then publish
-- Run `qualtrics-test` on the copy against `instrument_vN.md` (with `--pixels` when images were uploaded), and fix mismatches that come from this build.
+- Run `qualtrics-test` on the copy against `instrument_vN.md`: Parts 1 and 2 (with `--pixels` when images were uploaded), then Part 3's walks for everything the API can't verify. Fix mismatches that come from this build.
 - `qualtrics.py compare` does not check DisplayLogic or the flow. GET every question whose logic you wrote and the whole `/flow` after the PUT, and compare them with what you sent.
 - Then publish: `POST {BASE}/versions` with `{"Description": "Instrument vN", "Published": true}`.
 
