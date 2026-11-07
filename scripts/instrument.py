@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 
 RE_FENCE = re.compile(r"^\s*(```|~~~)")
+RE_TABLE_ROW = re.compile(r"^\s*[|+]")
+MAX_TABLE_WIDTH = 80
 RE_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 RE_CODE_ONLY = re.compile(r"^(`+)(.+?)\1$")
 RE_CODE_SPAN = re.compile(r"(`+)(.+?)\1")
@@ -96,6 +98,9 @@ def parse(md: str) -> dict:
                 note_target().append("\n".join(fence_lines))
                 fence_start, fence_lines = None, []
             else:
+                if RE_TABLE_ROW.match(line) and len(line) > MAX_TABLE_WIDTH:
+                    raise InstrumentError(f"line {lineno}: table row over {MAX_TABLE_WIDTH} characters; "
+                                          "wrap long cells onto more lines (a grid table)")
                 fence_lines.append(line)
             continue
         if RE_FENCE.match(line):

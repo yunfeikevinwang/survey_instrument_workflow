@@ -26,7 +26,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
    - Heading styles never become Markdown headings: write the line as plain text with a `` `Heading` `` note. A doc heading that only names a section is dropped (the block header covers it). Bold and italic carry over. Numbered and bulleted paragraphs become list items.
    - Page breaks: a hard break (`w:br w:type="page"`) or a horizontal-rule shape (`o:hr="t"`, how Google Docs exports a line) becomes `---`.
    - A condition the doc writes just above a question goes under that question's header (see `format.md`).
-   - Write the survey flow block by block, fence code of three or more lines in a row (one or two lines stay inline), and collapse long numeric option lists into a `Choices:` range (see `format.md`).
+   - Write the survey flow block by block, fence code of three or more lines in a row (one or two lines stay inline), write tables as grid tables at most 80 characters wide (wrap long cells), and collapse long numeric option lists into a `Choices:` range (see `format.md`).
    - Logic runs become inline code; adjacent logic runs merge into one span. A whole paragraph of logic becomes a code line, and several in a row become a fenced code block.
 3. **Images.**
    - Copy each file out of `word/media/` byte for byte. Never re-encode or resize.

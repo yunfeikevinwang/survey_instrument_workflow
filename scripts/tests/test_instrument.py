@@ -136,6 +136,12 @@ def test_fenced_block_inside_question_is_note():
     assert q1["choices"] == []
 
 
+def test_wrapped_grid_table_parses():
+    table = "+---+-----+\n| a | one |\n|   | two |\n+---+-----+"
+    md = "## `S`\n\n## `B`\n\n```\n" + table + "\n" + "a long note " * 10 + "\n```\n"
+    assert parse(md)["blocks"][0]["notes"] == [table + "\n" + "a long note " * 10]
+
+
 def test_repo_sample_parses():
     parsed = parse((REPO / "instrument_v1.md").read_text())
     assert [b["name"] for b in parsed["blocks"]] == ["Consent", "AI usage", "Treatment", "Demographics"]
@@ -159,6 +165,8 @@ def test_repo_sample_parses():
         ("## `S`\n\n## `B`\n\n##### `Q1: Text [QID1]`\n\n##### `Q1: Text [QID1]`\n", "Duplicate QID1"),
         ("## `S`\n\n## `B`\n\n## `B`\n", "Duplicate block"),
         ("## `S`\n\n## `B`\n\n```\nunclosed\n", "Unclosed code block"),
+        ("## `S`\n\n```\n| a | " + "x" * 80 + " |\n```\n", "line 4: table row over 80 characters"),
+        ("## `S`\n\n```\n+---+" + "-" * 80 + "+\n```\n", "line 4: table row over 80 characters"),
     ],
 )
 def test_format_violations_fail_loudly(md, message):

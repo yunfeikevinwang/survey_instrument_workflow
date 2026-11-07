@@ -14,7 +14,7 @@ The essentials:
 - Page timers are one setup line (`Page timers: every page`), not questions.
 - Answer options are the list at the end of a question; any other list is visible text.
 - A question's logic goes under its own header, never above it; a short display condition goes in the header itself.
-- Survey flow is written block by block, not in one block at the top. Code of three or more lines in a row goes in a fence; one or two lines stay inline.
+- Survey flow is written block by block, not in one block at the top. Code of three or more lines in a row goes in a fence; one or two lines stay inline. A table is a grid table at most 80 characters wide, with long cells wrapped onto more lines.
 
 ## Rules when editing
 - **Edit only the newest version.** Older `instrument_vN.md` files are frozen: they describe surveys that are already built.

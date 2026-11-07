@@ -73,6 +73,17 @@ question content: text, options, images, logic
 - **Logic about a question goes under its header.** A display condition written above a header belongs to the question before it.
 - **Survey flow lives with the blocks.** The top of the file holds only survey-wide settings. Each block says when it is shown. A flow step between blocks (embedded data, randomizer, web service) goes on the next block as `Before this block: …`; an end of survey goes on the block it ends as `After this block: …`.
 - **Keep code short.** Write logic as inline code, one note per line. One or two lines of code stay inline; three or more lines in a row go in a fenced block, e.g. a table or a script's rules. Don't repeat what the header already says.
+- **Tables are grid tables at most 80 characters wide.** A table is code, so it goes in a fence. Wrap a long cell onto more lines rather than widening the column; the parser rejects a table row over 80 characters.
+
+    ```
+    +-----+----------------------+
+    | Arm | Activity             |
+    +=====+======================+
+    | BT  | Try all four         |
+    |     | Offer payment for    |
+    |     | blocking PrimaryLLM  |
+    +-----+----------------------+
+    ```
 - **Answer options are the list at the end of a question.** Other lists are visible text: a list followed by more text, numbered steps just before bulleted options, and any list in a `Text` question. To show a literal number that isn't a list, escape it: `1\. Click the three dots`.
 - **A line of only `---`, `___` or `***` is always a page break.** So an answer box drawn with underscores must be code, `` `_______________` ``, never bare `___`.
 - **A bracketed note with spaces is code, not a piped variable:** `` `[show if they say yes]` ``.
