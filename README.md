@@ -12,7 +12,7 @@ A simple, AI-friendly workflow for implementing survey instruments. This repo is
 
 ## Iteration loop
 
-1. **Create instrument and images.** AI and humans create version N of the instrument and images. *(skill: `instrument-format`)*
+1. **Create instrument and images.** AI and humans create version N of the instrument and images. *(skill: `instrument-format` and `convert-legacy-instrument`)*
 2. **Implement.** AI copies the version N−1 Qualtrics project and applies the changes between `instrument_v(N-1).md` and `instrument_vN.md`. New questions get their QIDs written into `instrument_vN.md`. A human checks everything for correctness, formatting, and maintainable logic. At this point, it is okay to tweak the new instrument to make sure things are fully specified and match. *(skills: `qualtrics-implement`, `qualtrics-test`)*
 3. **Review.** Now, `instrument_vN.md`, `/images_vN`, and the implementation are _frozen_. Based on the implementation, PIs leave comments and suggested edits on the instrument uploaded to Google Docs.
 4. **Update instrument and images.** Now the review document is _frozen_. Download the comments and suggestions as a Word document. AI and humans read it and draft `instrument_v(N+1).md`. *(skill: `ingest-review-feedback`)*
