@@ -4,6 +4,7 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 `BASE = https://$QUALTRICS_DATA_CENTER.qualtrics.com/API/v3/survey-definitions/<SURVEY_ID>`, with every call sending `X-API-TOKEN: $QUALTRICS_API_TOKEN`.
 
 ## Responses
+- Call the API with `curl` (from Python, through `subprocess`). Python's `urllib` fails with `CERTIFICATE_VERIFY_FAILED` on python.org builds for macOS, which lack CA certificates.
 - Parse with `json.loads(raw.decode("utf-8"), strict=False)`. Question HTML contains control characters that strict parsing rejects.
 - A single item is in `.result`, and a list is in `.result.elements`.
 - Check `meta.httpStatus`. The `PUT /flow` and `PUT /options` responses have no `result`, so GET afterwards to verify.
@@ -15,7 +16,9 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
     (drop `None` values).
   - After the PUT, GET again and compare every field against the pre-PUT copy.
 - **Block:** `PUT {BASE}/blocks/{bid}` without `BlockElements` empties the block. GET, change, PUT the whole block. If a block is both renamed and reordered, send the final `BlockElements` in a single PUT.
-- To remove DisplayLogic, send `"DisplayLogic": null`. Don't just omit it.
+- To remove DisplayLogic, leave `DisplayLogic` out of the PUT body. Sending `"DisplayLogic": null` is rejected with `ESDEF10` ("Invalid type. Expected: object, given: null"; seen 2026-11-06).
+- **Moving a question between blocks:** a PUT of the target block that lists the question does not take it out of its old block, so it sits in both. PUT the old block without it as well (seen 2026-11-06).
+- `DELETE {BASE}/questions/{qid}` also removes the question from its block's `BlockElements`.
 
 ## Creating
 - **`POST {BASE}/blocks` appends a flow node for the new block at the end of the survey flow.** After creating blocks, GET `/flow`, remove the auto-added trailing node, and place the block where it belongs. Otherwise the block is shown twice.
@@ -52,6 +55,6 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
   - body `{"projectName": "<name>"}`.
   - The new survey's ID is in `.result.id`.
   - QIDs and block IDs are kept (verified 2026-11-05).
-- **The copy must go to the account's home data center.** Through a proxied data center, the copy headers are dropped and the call fails with `SR_1` ("both X-COPY-SOURCE and X-COPY-DESTINATION-OWNER headers are required"). Any response's `meta.notice` names the home host ("use this host instead: pdx1.qualtrics.com"). For Stanford that is `pdx1`, while `load_env.sh` gives `iad1`.
+- **The copy must go to the account's home data center.** Through a proxied data center, the copy headers are dropped and the call fails with `SR_1` ("both X-COPY-SOURCE and X-COPY-DESTINATION-OWNER headers are required"). Any response's `meta.notice` names the home host ("use this host instead: pdx1.qualtrics.com"). For Stanford that is `pdx1`, while `load_env.sh` gives `iad1`. For MIT, `load_env.sh` already gives the home host, `co1`.
 - **Writes land in the draft. Respondent and preview links serve the last published version.** Publish with `POST {BASE}/versions` and body `{"Description": "...", "Published": true}`.
 - `PUT {BASE}/options` merges, so a key you leave out stays unchanged.

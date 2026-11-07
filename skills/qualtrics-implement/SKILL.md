@@ -68,6 +68,7 @@ When a code note is ambiguous, don't guess. Leave that change out, log it as ski
 
 ## 5. Verify, then publish
 - Run `qualtrics-test` on the copy against `instrument_vN.md`, and fix mismatches that come from this build.
+- `qualtrics.py compare` does not check DisplayLogic or the flow. GET every question whose logic you wrote and the whole `/flow` after the PUT, and compare them with what you sent.
 - Then publish: `POST {BASE}/versions` with `{"Description": "Instrument vN", "Published": true}`.
 
 ## 6. Report
