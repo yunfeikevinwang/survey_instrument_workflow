@@ -16,7 +16,7 @@ All Qualtrics calls go through the REST API (`curl` or Python).
 - The local path of the shared drive's root (e.g. the Google Drive for desktop mount), so that `<root>/<Drive path>` from the `Images:` line holds the images. Only needed when the instrument uses images.
 - **First build:** if there's no previous survey, the user creates an empty survey in Qualtrics, and `instrument_v(N-1).md` is just a title line. Every question is then `NEW`.
 
-Work in `./.qualtrics/vN/`. Append one JSON line per write to `log.jsonl`, with the change, the endpoint, the status, and a note.
+Work in `./.qualtrics/vN/`, and make sure the repository's `.gitignore` covers `.qualtrics/`. Append one JSON line per write to `log.jsonl`, with the change, the endpoint, the status, and a note. Save survey snapshots only with `qualtrics.py dump`, which redacts web-service headers; never write a raw `GET {BASE}` or `/flow` response to disk, because it carries live credentials.
 
 ## 1. Check the starting point
 ```bash

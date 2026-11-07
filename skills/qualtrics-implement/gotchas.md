@@ -4,6 +4,7 @@ Only behaviour seen on the REST API (`/API/v3`) is listed here.
 `BASE = https://$QUALTRICS_DATA_CENTER.qualtrics.com/API/v3/survey-definitions/<SURVEY_ID>`, with every call sending `X-API-TOKEN: $QUALTRICS_API_TOKEN`.
 
 ## Responses
+- A raw survey definition (`GET {BASE}`, `GET /flow`) includes web-service headers with live credentials. Keep it in memory; to save a snapshot use `qualtrics.py dump`, which redacts them.
 - Call the API with `curl` (from Python, through `subprocess`). Python's `urllib` fails with `CERTIFICATE_VERIFY_FAILED` on python.org builds for macOS, which lack CA certificates.
 - Parse with `json.loads(raw.decode("utf-8"), strict=False)`. Question HTML contains control characters that strict parsing rejects.
 - A single item is in `.result`, and a list is in `.result.elements`.
