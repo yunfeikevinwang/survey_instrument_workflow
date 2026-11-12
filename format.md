@@ -16,7 +16,7 @@ See [instrument_v1.md](instrument_v1.md) for a complete example.
 |---|---|---|
 | Questions and instructions | Bold and italics exactly where participants see them, and nowhere else | `How are you?`, `Please **read** this _carefully_.` |
 | Answer options | Use bullets (the list at the end of a question) | `- Yes` |
-| Links | Markdown link on the visible words; a bare URL as `<url>` | `[Professor Salz](https://example.edu)`, `<https://chatgpt.com/>` |
+| Links | Markdown link on the visible words; a bare URL as `<url>` | `[Professor Smith](https://example.edu)`, `<https://chatgpt.com/>` |
 | Headings and other styling | Plain line; the style is a code note beside it (`Heading` = `<h2>`, `Subheading` = `<h3>`) | ``**Welcome to the study** `Heading` `` |
 | Page break | Use horizontal rule | `---` |
 
@@ -97,19 +97,19 @@ question content: text, options, images, logic
 - **A changed image gets a new file name,** e.g. `consent_logo_v2_w300.png`; a new width is a new name too. The file name is how a change is detected.
 - **The setup's `Images:` line names where images live and how they look,** in three parts separated by `;`:
     - `Drive <path>, <link>`: the one Google Drive folder that collects every image of a family of surveys and all their versions, e.g. `Qualtrics/main_images`. The path is relative to the shared drive's root. Files there are never overwritten or renamed, because a changed image always gets a new name, so every earlier version still finds the files it used.
-    - `Qualtrics folder "<name>"`: the Qualtrics library folder for this survey, shared by all its versions, e.g. `AIMarket Main Survey 1`. A human creates it once; its name must be unique in the library. A registry file next to the instruments, `qualtrics_images.json`, records which files each folder holds and their graphic ids. Write `Qualtrics folder none` for a legacy survey whose images predate this rule.
+    - `Qualtrics folder "<name>"`: the Qualtrics library folder for this survey, shared by all its versions, e.g. `Consumer AI Survey 1`. A human creates it once; its name must be unique in the library. A registry file next to the instruments, `qualtrics_images.json`, records which files each folder holds and their graphic ids. Write `Qualtrics folder none` for a legacy survey whose images predate this rule.
     - `<N>px solid border on every image`, optionally `except <file>, <file>` for images shown without one, or `no border`.
 
     The parts are split on `;` and the Drive path ends at the first `,`, so neither character may appear in a path or folder name.
 - **A workflow that hands data to a later survey is two setup lines,** and the later survey's authenticator lists what it reads:
 
     ```
-    Workflow "Survey 1 → Survey 2 panel": on each completed response, add or update a contact in contact list "AIMarket Pilots" (CG_1eDfJ70OjrLwcEs), with external data reference = PROLIFIC_PID.
-    Workflow fields: assigned_group → assigned_group_s1, ChatbotOrder → ChatbotOrder_s1
+    Workflow "Survey 1 → Survey 2 panel": on each completed response, add or update a contact in contact list "Consumer AI Panel" (CG_XXXXXXXXXXXXXXX), with external data reference = PROLIFIC_PID.
+    Workflow fields: arm → arm_s1, PrimaryLLM → PrimaryLLM_s1
     ```
     ```
-    Authenticator before the first block: contact list "AIMarket Pilots" (CG_1eDfJ70OjrLwcEs), matching PROLIFIC_PID to the contact's external data reference.
-    Authenticator fields: assigned_group_s1, ChatbotOrder_s1
+    Authenticator before the first block: contact list "Consumer AI Panel" (CG_XXXXXXXXXXXXXXX), matching PROLIFIC_PID to the contact's external data reference.
+    Authenticator fields: arm_s1, PrimaryLLM_s1
     ```
 
     `instrument.py handoff S1.md S2.md` reports any field the authenticator reads that the workflow doesn't write, or a different contact list. Qualtrics workflows can't be read or changed through the API, so the instrument is the only record of the mapping.

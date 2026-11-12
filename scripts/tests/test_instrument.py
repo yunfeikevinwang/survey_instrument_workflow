@@ -11,7 +11,7 @@ BASIC = """\
 
 ```
 Set [pid] from URL
-Images: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder "AIMarket Main Survey 1"; 3px solid border on every image.
+Images: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder "Consumer AI Survey 1"; 3px solid border on every image.
 Page timers: every page except in: Demographics
 ```
 
@@ -64,7 +64,7 @@ def q(parsed, qid):
 
 def test_title_and_setup(basic):
     assert basic["title"] == "Survey"
-    assert basic["setup"] == ["Set [pid] from URL\nImages: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder \"AIMarket Main Survey 1\"; 3px solid border on every image.\nPage timers: every page except in: Demographics"]
+    assert basic["setup"] == ["Set [pid] from URL\nImages: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder \"Consumer AI Survey 1\"; 3px solid border on every image.\nPage timers: every page except in: Demographics"]
     assert basic["page_timers"] == {"except": ["Demographics"]}
 
 
@@ -353,11 +353,11 @@ def test_format_structure_example_parses():
 
 def test_images_setup_line(basic):
     assert basic["images"] == {"drive": "Qualtrics/main_images", "link": "https://drive.example/f",
-                               "folder": "AIMarket Main Survey 1", "border": {"px": 3, "except": []}}
+                               "folder": "Consumer AI Survey 1", "border": {"px": 3, "except": []}}
 
 
 def test_images_setup_line_with_no_folder_exceptions_and_no_border():
-    legacy = BASIC.replace('Qualtrics folder "AIMarket Main Survey 1"; 3px solid border on every image.',
+    legacy = BASIC.replace('Qualtrics folder "Consumer AI Survey 1"; 3px solid border on every image.',
                            "Qualtrics folder none; 3px solid border on every image except logo_w300.png.")
     assert parse(legacy)["images"]["folder"] is None
     assert parse(legacy)["images"]["border"] == {"px": 3, "except": ["logo_w300.png"]}

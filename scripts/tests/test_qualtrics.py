@@ -175,7 +175,7 @@ def with_arm_html(html):
     return normalize(definition)
 
 
-IMAGES_SETUP = ('`Images: Drive Qualtrics/main_images, https://d/f; Qualtrics folder "AIMarket Main Survey 1"; '
+IMAGES_SETUP = ('`Images: Drive Qualtrics/main_images, https://d/f; Qualtrics folder "Consumer AI Survey 1"; '
                 '3px solid border on every image.`')
 BORDERED = ('Arm text<img src="https://x/?IM=IM_1" width="250" height="544" '
             'style="width: 250px; height: 544px; border-width: 3px; border-style: solid;">')

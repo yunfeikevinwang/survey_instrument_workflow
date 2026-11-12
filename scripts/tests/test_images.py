@@ -61,7 +61,7 @@ INSTRUMENT = """\
 ## `S — v1`
 
 ```
-Images: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder "AIMarket Main Survey 1"; 3px solid border on every image except icon_w20.png.
+Images: Drive Qualtrics/main_images, https://drive.example/f; Qualtrics folder "Consumer AI Survey 1"; 3px solid border on every image except icon_w20.png.
 Page timers: none
 ```
 
@@ -90,8 +90,8 @@ def test_plan_tags_gives_each_question_its_tags_in_order():
 
 def test_registry_reuses_known_uploads_per_folder():
     from images import to_upload
-    registry = {"AIMarket Main Survey 1": {"a_w700.png": "IM_a"}, "Other": {"b_w250.png": "IM_b"}}
-    assert to_upload(["a_w700.png", "b_w250.png"], registry, "AIMarket Main Survey 1") == ["b_w250.png"]
+    registry = {"Consumer AI Survey 1": {"a_w700.png": "IM_a"}, "Other": {"b_w250.png": "IM_b"}}
+    assert to_upload(["a_w700.png", "b_w250.png"], registry, "Consumer AI Survey 1") == ["b_w250.png"]
     assert to_upload(["a_w700.png"], {}, "New folder") == ["a_w700.png"]
 
 

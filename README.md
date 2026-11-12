@@ -47,34 +47,33 @@ When the user wants the finished `instrument_vN.md` in Google Docs for review:
 
 ### 1. Install the plugin
 ```bash
-claude plugin marketplace add ~/Documents/Github/survey_instrument_workflow
+claude plugin marketplace add yunfeikevinwang/survey_instrument_workflow
 ```
 ```bash
 claude plugin install survey-instrument-workflow@survey-tools
 ```
-The plugin loads from this folder in place, so after pulling changes, run `/reload-plugins` or start a new session.
+To work on the plugin itself, clone the repo and add the clone instead (`claude plugin marketplace add <path to clone>`). After pulling changes, run `claude plugin update survey-instrument-workflow@survey-tools` and start a new session.
 
 ### 2. Qualtrics credentials (only needed for the qualtrics skills)
-Create `~/.claude/secrets/qualtrics_tokens.env`. Never commit it. Add one block per Qualtrics account you use:
+Create `~/.claude/secrets/qualtrics_tokens.env`. Never commit it. Add one block per Qualtrics account, named however you like; the skills then refer to the account by that name (`mit` below):
 ```bash
-QUALTRICS_STANFORD_TOKEN=...   # instance "qualtrics"
-QUALTRICS_STANFORD_DC=iad1
-QUALTRICS_STANFORD_BRAND=stanforduniversity
-
-QUALTRICS_MIT_TOKEN=...        # instance "qualtrics-mit"
+QUALTRICS_MIT_TOKEN=...
 QUALTRICS_MIT_DC=co1
 QUALTRICS_MIT_BRAND=mit
 ```
 - **Token:** Qualtrics → Account Settings → Qualtrics IDs → API.
-- **Data center:** the label before `.qualtrics.com` in your account's address, e.g. `mit.co1.qualtrics.com` → `co1`.
+- **Data center and brand:** from your account's address, `<brand>.<data center>.qualtrics.com`, e.g. `mit.co1.qualtrics.com` → brand `mit`, data center `co1`.
 
 Then lock the file down and check the token. A `userId` in the response means it works; `401` means a bad token, and a connection error means a wrong data center.
 ```bash
 chmod 600 ~/.claude/secrets/qualtrics_tokens.env
 ```
 ```bash
-source scripts/load_env.sh qualtrics && curl -s -H "X-API-TOKEN: $QUALTRICS_API_TOKEN" "https://$QUALTRICS_DATA_CENTER.qualtrics.com/API/v3/whoami"
+source scripts/load_env.sh mit && curl -s -H "X-API-TOKEN: $QUALTRICS_API_TOKEN" "https://$QUALTRICS_DATA_CENTER.qualtrics.com/API/v3/whoami"
 ```
+
+## License
+MIT; see [LICENSE](LICENSE).
 
 ## Development
 The scripts in `scripts/` use only the Python standard library. Tests:

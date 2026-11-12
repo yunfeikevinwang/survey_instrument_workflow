@@ -1,4 +1,8 @@
 {
   "name": "survey-instrument-workflow",
-  "description": "Write survey instruments in Markdown, implement them in Qualtrics, and fold in review feedback."
+  "version": "1.0.0",
+  "description": "Write survey instruments in Markdown, implement them in Qualtrics, and fold in review feedback.",
+  "author": { "name": "Kevin Yunfei Wang" },
+  "repository": "https://github.com/yunfeikevinwang/survey_instrument_workflow",
+  "license": "MIT"
 }

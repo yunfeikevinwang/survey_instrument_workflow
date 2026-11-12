@@ -1,6 +1,6 @@
 {
   "name": "survey-tools",
-  "owner": { "name": "Kevin Wang" },
+  "owner": { "name": "Kevin Yunfei Wang" },
   "description": "Survey instrument workflow plugin",
   "plugins": [
     { "name": "survey-instrument-workflow", "source": "./" }
