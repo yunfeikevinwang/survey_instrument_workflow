@@ -36,6 +36,13 @@ See [format.md](format.md), with [instrument_v1.md](instrument_v1.md) as an exam
 | `qualtrics-test` | Compares a live survey with its instrument (read-only) |
 | `ingest-review-feedback` | Reviewed `.docx` → draft `instrument_v(N+1).md` + decisions |
 
+## Handing an instrument to Google Docs
+
+When the user wants the finished `instrument_vN.md` in Google Docs for review:
+1. Copy the file into a temporary folder under the user's Google Drive for desktop mount (`~/Library/CloudStorage/GoogleDrive-<account>/My Drive/<temporary folder>/`). Drive syncs it as a plain `.md` file; it isn't converted.
+2. Give the user the folder's link (a Google Drive connector can look it up once the file has synced). They open the file with **Open with → Google Docs**, which creates the converted Doc, and copy it where the review lives.
+3. When they say they're done, delete the temporary folder. First check it holds only the `.md` copies: a Doc converted inside it would be deleted too. Removing it through the mount moves it to Drive's trash, where it stays recoverable for 30 days.
+
 ## Setup
 
 ### 1. Install the plugin
