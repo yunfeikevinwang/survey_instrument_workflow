@@ -23,7 +23,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
 2. **Text.**
    - Keep the wording exactly. Don't fix typos; list them for the report.
    - Hyperlinks become Markdown links on the same words, `[words](url)`, or `<url>` when the visible text is the URL. Add `All links open in a new tab.` to the setup if that's how they behave.
-   - Heading styles never become Markdown headings: write the line as plain text with a `` `Heading` `` note. A doc heading that only names a section is dropped (the block header covers it). Bold and italic carry over. Numbered and bulleted paragraphs become list items.
+   - Heading styles never become Markdown headings: write the line as plain text with a `` `Heading` `` note. A doc heading that only names a section is dropped (the block header covers it). Bold and italic carry over exactly as the doc has them, or as the live survey shows them when it is live (`compare` checks them); never make a question bold just because it is a question. Numbered and bulleted paragraphs become list items.
    - Page breaks: a hard break (`w:br w:type="page"`) or a horizontal-rule shape (`o:hr="t"`, how Google Docs exports a line) becomes `---`.
    - A condition the doc writes just above a question goes under that question's header (see `format.md`).
    - Write the survey flow block by block, fence code of three or more lines in a row (one or two lines stay inline), write tables as grid tables at most 80 characters wide (wrap long cells), and collapse long numeric option lists into a `Choices:` range (see `format.md`).

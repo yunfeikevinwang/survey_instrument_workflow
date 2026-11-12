@@ -22,7 +22,7 @@ DEFINITION = {
     "Questions": {
         "QID1": {"QuestionText": "<b>Welcome</b> to the&nbsp;study.<br>Hi ${e://Field/pid}!",
                  "QuestionType": "DB", "Selector": "TB", "DataExportTag": "Intro"},
-        "QID2": {"QuestionText": "<div>Agree?</div>", "QuestionType": "MC", "Selector": "SAVR",
+        "QID2": {"QuestionText": "<div><strong>Agree?</strong></div>", "QuestionType": "MC", "Selector": "SAVR",
                  "DataExportTag": "Agree", "ChoiceOrder": [2, 1],
                  "Choices": {"1": {"Display": "No"}, "2": {"Display": "<span>Yes</span>"}},
                  "DisplayLogic": {"0": {"Type": "If"}}},
@@ -277,3 +277,42 @@ def test_link_target_mismatch_is_reported():
     assert compare(parse(edited), _with_links()) == [
         {"qid": "QID3", "field": "links", "instrument": [["Prof X", "https://x.org/q"], ["https://y.com/", "https://y.com/"]],
          "survey": [["Prof X", "https://x.org/p"], ["https://y.com/", "https://y.com/"]]}]
+
+
+def _with_text(html_text):
+    definition = {**DEFINITION, "Questions": {**DEFINITION["Questions"]}}
+    definition["Questions"]["QID3"] = {"QuestionText": html_text, "QuestionType": "DB", "Selector": "TB",
+                                       "DataExportTag": "ArmText"}
+    return normalize(definition)
+
+
+def test_dump_records_bold_and_italic_runs():
+    q = _with_text('<b>Welcome</b> to the <em>study</em>, <span style="font-weight: bold;">${e://Field/pid}</span>.'
+                   '<h2>Title</h2><i>aside</i>')["questions"]["QID3"]
+    assert q["bold"] == ["Welcome", "[pid]", "Title"]
+    assert q["italic"] == ["study", "aside"]
+
+
+def test_adjacent_runs_merge_and_line_breaks_split_them():
+    q = _with_text("<strong>Log in</strong> <strong>now</strong>&nbsp;<strong>please</strong>"
+                   "<br><strong>Next</strong><br>\n<strong>line</strong> plain")["questions"]["QID3"]
+    assert q["bold"] == ["Log in now please", "Next", "line"]
+
+
+def test_markdown_bold_and_italic_match_live_runs():
+    dump = _with_text("<h2><strong>Title</strong></h2>\n<strong>Log in</strong> to <em>your</em> account.")
+    edited = INSTRUMENT.replace("\nArm text\n", "\n**Title** `Heading`\n\n**Log in** to *your* account.\n")
+    assert compare(parse(edited), dump) == []
+
+
+def test_bold_and_italic_mismatches_are_reported():
+    dump = _with_text("Log in to <em>your</em> account.")
+    edited = INSTRUMENT.replace("\nArm text\n", "\n**Log in** to your account.\n")
+    assert compare(parse(edited), dump) == [
+        {"qid": "QID3", "field": "bold", "instrument": ["Log in"], "survey": []},
+        {"qid": "QID3", "field": "italic", "instrument": [], "survey": ["your"]}]
+
+
+def test_bold_in_choices_is_compared(dump):
+    edited = INSTRUMENT.replace("- Yes", "- **Yes**")
+    assert [(m["qid"], m["field"]) for m in compare(parse(edited), dump)] == [("QID2", "bold")]

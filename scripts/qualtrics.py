@@ -28,6 +28,11 @@ RE_STYLE_PX = r"(?<![-\w]){}\s*:\s*(\d+)px"
 RE_ATTR = r'\b{}="(\d+)"'
 RE_ANCHOR = re.compile(r'<a\b[^>]*?\bhref="([^"]*)"[^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
 RE_MD_LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)|<(https?://[^>\s]+)>")
+RE_HTML_TOKEN = re.compile(r"<(/?)([a-zA-Z][a-zA-Z0-9]*)([^>]*)>|([^<]+)")
+BOLD_TAGS = {"strong", "b", "h1", "h2", "h3", "h4", "h5", "h6"}
+ITALIC_TAGS = {"em", "i"}
+BREAK_TAGS = {"br", "p", "div", "li", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6"}
+VOID_TAGS = {"br", "img", "hr", "input", "meta", "link"}
 HELPER_TYPES = {"Timing", "Meta"}
 
 
@@ -57,6 +62,78 @@ def image_tags(html_text: str) -> list[dict]:
         out.append({"im": im.group(1) if im else None, "width": size("width"), "height": size("height"),
                     "border_px": int(border.group(1)) if border and solid else 0})
     return out
+
+
+def group_runs(segments) -> list[str]:
+    """Runs of styled text from (text, styled) segments, None marking a line break.
+    Styled pieces separated only by whitespace join into one run; a line break ends a run."""
+    runs, current, gap = [], [], ""
+    for seg in segments:
+        if seg is None:
+            if current:
+                runs.append("".join(current))
+            current, gap = [], ""
+            continue
+        text, styled = seg
+        if styled:
+            current.append(gap + text if current else text)
+            gap = ""
+        elif current and not text.strip():
+            gap += text
+        elif current:
+            runs.append("".join(current))
+            current, gap = [], ""
+    if current:
+        runs.append("".join(current))
+    return [r for r in (re.sub(r"\s+", " ", r).strip() for r in runs) if r]
+
+
+def html_runs(fragments: list, style: str) -> list[str]:
+    """Bold or italic runs of visible text, from tags (headings count as bold) and font-weight/font-style."""
+    tags, css = (BOLD_TAGS, r"font-weight\s*:\s*(bold|[6-9]00)") if style == "bold" \
+        else (ITALIC_TAGS, r"font-style\s*:\s*italic")
+    segments = []
+    for fragment in fragments:
+        stack = []
+        for close, name, attrs, text in RE_HTML_TOKEN.findall(str(fragment or "")):
+            name = name.lower()
+            if text:
+                text = RE_FIELD_PIPE.sub(r"[\1]", html.unescape(text).replace("\xa0", " "))
+                for i, line in enumerate(text.split("\n")):
+                    if i:
+                        segments.append(None)
+                    segments.append((line, any(stack)))
+                continue
+            if name in BREAK_TAGS:
+                segments.append(None)
+            if name in VOID_TAGS or attrs.rstrip().endswith("/"):
+                continue
+            if close:
+                if stack:
+                    stack.pop()
+            else:
+                stack.append(name in tags or bool(re.search(css, attrs, re.IGNORECASE)))
+        segments.append(None)
+    return group_runs(segments)
+
+
+def markdown_runs(fragments: list[str], style: str) -> list[str]:
+    segments = []
+    for fragment in fragments:
+        for line in fragment.split("\n"):
+            line = RE_MD_ESCAPE.sub(r"\1", RE_MD_LINK.sub(lambda m: m[1] or m[3], line)).replace("`", "")
+            if style == "bold":
+                pattern, inner = RE_MD_STRONG, line
+            else:
+                pattern, inner = RE_MD_EM, RE_MD_STRONG.sub(r"\2", line)
+            pos = 0
+            for m in pattern.finditer(inner):
+                segments.append((inner[pos:m.start()], False))
+                segments.append((m.group(2) if style == "italic" else RE_MD_EM.sub(r"\2", m.group(2)), True))
+                pos = m.end()
+            segments.append((inner[pos:], False))
+            segments.append(None)
+    return group_runs(segments)
 
 
 def html_links(fragments: list) -> list[list[str]]:
@@ -131,6 +208,8 @@ def normalize(definition: dict) -> dict:
                 "js": (q.get("QuestionJS") or "").strip() or None,
                 "links": html_links([q.get("QuestionText")]
                                     + [c.get("Display") for c in (q.get("Choices") or {}).values()]),
+                "bold": html_runs([q.get("QuestionText")] + [q["Choices"][str(c)]["Display"] for c in choice_order], "bold"),
+                "italic": html_runs([q.get("QuestionText")] + [q["Choices"][str(c)]["Display"] for c in choice_order], "italic"),
             }
     embedded = [f["Field"] for node in flow.get("Flow", []) if node.get("Type") == "EmbeddedData"
                 for f in node.get("EmbeddedData", [])]
@@ -197,6 +276,10 @@ def compare(instrument: dict, dump: dict, pixels: dict | None = None) -> list[di
         links = markdown_links([q["text"]] + [c["text"] for c in q["choices"]])
         if links != live["links"]:
             report(q["id"], "links", links, live["links"])
+        for style in ("bold", "italic"):
+            runs = markdown_runs([q["text"]] + [c["text"] for c in q["choices"]], style)
+            if runs != live[style]:
+                report(q["id"], style, runs, live[style])
         if len(q["images"]) != len(live["images"]):
             report(q["id"], "images", q["images"], len(live["images"]))
         else:

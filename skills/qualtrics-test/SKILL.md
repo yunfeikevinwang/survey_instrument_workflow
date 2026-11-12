@@ -23,7 +23,7 @@ python3 $S/qualtrics.py compare instrument_vN.md .qualtrics/test.json [--pixels]
 ```
 This reports block order, page breaks, block membership, labels (data export tags), link text and targets, page timers against the `Page timers:` line, visible text, choices, images (count, each one's width against the `_w` in its file name, and its border against the `Images:` line and its exceptions; with `--pixels`, also that no image is stretched or upscaled), `NEW` questions not yet built, and questions missing on either side. Which file a graphic came from can't be checked.
 
-Text is compared after removing HTML and Markdown formatting. A text mismatch can therefore be a formatting-only difference, e.g. a line break or spacing. Say so when that's all it is.
+Text is compared after removing HTML and Markdown formatting; bold and italic are compared separately, as the runs of styled text (`bold` and `italic` mismatches: headings count as bold, runs separated only by spaces merge, a line break ends a run). A text mismatch can therefore be a formatting-only difference, e.g. a line break or spacing. Say so when that's all it is.
 
 ## 2. Logic check (you)
 For each question, choice, and block with code notes, and for the setup block, find what the notes describe in the dump. The dump's `display_logic`, `validation`, and `flow` hold DisplayLogic, skip logic, randomization, embedded data, branches, web-service calls, and end-of-survey. Each question's JavaScript is in `js`; read it, because it often holds logic (fields set in JavaScript, answer checks, hidden buttons). The question type is in the dump's `type`. Web-service headers are redacted in the dump; never copy them anywhere. Classify each note:
