@@ -86,7 +86,7 @@ When a code note is ambiguous, don't guess. Leave that change out, log it as ski
 - **QIDs assigned:** `instrument_vN.md` was edited, and a human commits it.
 - **Registry:** `qualtrics_images.json` gained N graphic ids; a human commits it with the instrument.
 - **Images:** how many were uploaded into which folder and how many were reused. Ask the user to check that the new ones are in the folder and Uncategorized gained none.
-- **Manual steps:** anything that couldn't be done through the API.
+- **Manual steps:** anything that couldn't be done through the API. If the instrument has a `Workflow` line, always list: "switch the workflow on in the new survey's Workflows tab" (a copy may bring it over switched off), and, when the `Workflow fields:` line changed, "update the workflow's field mapping" with the new mapping. The API can't read or edit workflows. Then run `qualtrics-test`'s handoff check.
 
 ## API endpoints
 | Operation | Call |

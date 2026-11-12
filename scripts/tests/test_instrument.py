@@ -391,3 +391,42 @@ def test_malformed_images_line_is_an_error():
 def test_border_exception_must_be_an_image_in_the_instrument():
     with pytest.raises(InstrumentError, match="other_w20.png"):
         parse(BASIC.replace("every image.", "every image except other_w20.png."))
+
+
+def _setup(*lines):
+    return "## `S`\n\n```\nPage timers: none\n" + "\n".join(lines) + "\n```\n\n## `B`\n\n##### `Q: Text [QID1]`\n\nHi\n"
+
+
+S1_WORKFLOW = ('Workflow "S1 to S2": on each completed response, add or update a contact in contact list "Pilots" (CG_abc), '
+               'with external data reference = PROLIFIC_PID.',
+               "Workflow fields: assigned_group → assigned_group_s1, ChatbotOrder → ChatbotOrder_s1")
+S2_AUTH = ('Authenticator before the first block: contact list "Pilots" (CG_abc, library UR_x), matching PROLIFIC_PID.',
+           "Authenticator fields: assigned_group_s1, ChatbotOrder_s1")
+
+
+def test_workflow_and_authenticator_lines_are_parsed():
+    assert parse(_setup(*S1_WORKFLOW))["workflow"] == {
+        "name": "S1 to S2", "list": "CG_abc",
+        "fields": {"assigned_group": "assigned_group_s1", "ChatbotOrder": "ChatbotOrder_s1"}}
+    assert parse(_setup(*S2_AUTH))["authenticator"] == {"list": "CG_abc", "fields": ["assigned_group_s1", "ChatbotOrder_s1"]}
+    assert parse(_setup())["workflow"] is None and parse(_setup())["authenticator"] is None
+    assert parse(_setup("Authenticator before the first block: contact list panel CG_abc."))["authenticator"] is None
+
+
+def test_workflow_needs_both_lines_and_well_formed_fields():
+    with pytest.raises(InstrumentError, match="Workflow fields"):
+        parse(_setup(S1_WORKFLOW[0]))
+    with pytest.raises(InstrumentError, match="Workflow fields"):
+        parse(_setup(S1_WORKFLOW[0], "Workflow fields: assigned_group, ChatbotOrder → ChatbotOrder_s1"))
+    with pytest.raises(InstrumentError, match="contact list"):
+        parse(_setup('Workflow "x": on each completed response, add a contact.', S1_WORKFLOW[1]))
+
+
+def test_handoff_reports_fields_the_next_survey_reads_but_nobody_writes():
+    from instrument import handoff
+    s1, s2 = parse(_setup(*S1_WORKFLOW)), parse(_setup(*S2_AUTH))
+    assert handoff(s1, s2) == []
+    s2_more = parse(_setup(S2_AUTH[0], "Authenticator fields: assigned_group_s1, ChatbotOrder_s1, AcceptedBlockOffer_s1"))
+    assert handoff(s1, s2_more) == ["the authenticator reads AcceptedBlockOffer_s1, which the workflow doesn't write"]
+    other_list = parse(_setup(S2_AUTH[0].replace("CG_abc", "CG_zzz"), S2_AUTH[1]))
+    assert handoff(s1, other_list) == ["the workflow writes to CG_abc but the authenticator reads CG_zzz"]

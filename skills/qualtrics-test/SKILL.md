@@ -55,6 +55,16 @@ Then choose the fewest walks that cover the list. Force arms and embedded data w
 - Screenshot only failures, into `.qualtrics/walks/`.
 - Never change the survey to make a walk possible. List what couldn't be reached and why.
 
+## 4. Handoff check (when the instrument has a `Workflow` line)
+Qualtrics workflows can't be read through the API, so test the handoff end to end:
+1. `instrument.py handoff S1.md S2.md` must print `[]`.
+2. Walk Survey 1 to the end with a fresh test ID, and keep its embedded data.
+3. Poll the contact list (`GET /directories/<POOL>/mailinglists/<CG>/contacts?includeEmbedded=true`, all pages) until the contact with that external data reference appears; allow 15 minutes.
+4. Compare every `Workflow fields:` target with the walk's source value. A missing field means the workflow's mapping lacks it.
+5. Walk Survey 2 with the same ID once the authenticator accepts it (a new contact can take a few minutes), checking the pages that depend on the loaded fields.
+
+The walks create a test contact and responses; list them in the report for deletion.
+
 ## Report
 - **Coverage table:** item → walk → pass, fail or unreached (with the reason).
 - **Test responses created:** how many, and on which link, so they can be deleted.

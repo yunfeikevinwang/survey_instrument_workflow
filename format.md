@@ -101,3 +101,15 @@ question content: text, options, images, logic
     - `<N>px solid border on every image`, optionally `except <file>, <file>` for images shown without one, or `no border`.
 
     The parts are split on `;` and the Drive path ends at the first `,`, so neither character may appear in a path or folder name.
+- **A workflow that hands data to a later survey is two setup lines,** and the later survey's authenticator lists what it reads:
+
+    ```
+    Workflow "Survey 1 → Survey 2 panel": on each completed response, add or update a contact in contact list "AIMarket Pilots" (CG_1eDfJ70OjrLwcEs), with external data reference = PROLIFIC_PID.
+    Workflow fields: assigned_group → assigned_group_s1, ChatbotOrder → ChatbotOrder_s1
+    ```
+    ```
+    Authenticator before the first block: contact list "AIMarket Pilots" (CG_1eDfJ70OjrLwcEs), matching PROLIFIC_PID to the contact's external data reference.
+    Authenticator fields: assigned_group_s1, ChatbotOrder_s1
+    ```
+
+    `instrument.py handoff S1.md S2.md` reports any field the authenticator reads that the workflow doesn't write, or a different contact list. Qualtrics workflows can't be read or changed through the API, so the instrument is the only record of the mapping.

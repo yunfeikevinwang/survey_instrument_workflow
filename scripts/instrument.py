@@ -3,6 +3,7 @@
   instrument.py parse FILE              structured JSON of the instrument
   instrument.py diff OLD NEW            changes between two versions, keyed by QID
   instrument.py assign FILE LINE QID    replace [NEW] in the question header on LINE with [QID] (in place)
+  instrument.py handoff FROM TO         fields TO's authenticator reads that FROM's workflow doesn't write (JSON list)
 """
 
 import argparse
@@ -34,6 +35,11 @@ RE_IMAGES_BORDER = re.compile(r"^(?:(?P<px>\d+)px solid border on every image"
                               r"(?:\s+except\s+(?P<except>[\w\-]+(?:\.[\w\-]+)+(?:,\s*[\w\-]+(?:\.[\w\-]+)+)*))?|no border)\.?$")
 IMAGES_LINE_FORMAT = ('`Images: Drive <path>, <link>; Qualtrics folder "<name>" (or none); '
                       '<N>px solid border on every image [except a_w20.png, b_w200.png] (or no border).`')
+
+RE_WORKFLOW_LINE = re.compile(r'^Workflow "(?P<name>[^"]+)":(?P<rest>.*)$', re.MULTILINE)
+RE_AUTH_LINE = re.compile(r"^Authenticator before the first block:(.*)$", re.MULTILINE)
+RE_LIST_ID = re.compile(r"contact list \"[^\"]+\" \((CG_\w+)")
+RE_FIELDS_LINE = r"^{} fields:(.*)$"
 
 QUESTION_FIELDS = ["block", "label", "settings", "text", "choices", "notes", "images"]
 
@@ -185,6 +191,8 @@ def parse(md: str) -> dict:
 
     result["page_timers"] = page_timers(result)
     result["images"] = images_setup(result)
+    result["workflow"] = workflow_setup(result)
+    result["authenticator"] = authenticator_setup(result)
     for b in result["blocks"]:
         pages: dict[int, list[str]] = {}
         for x in result["questions"]:
@@ -242,6 +250,58 @@ def images_setup(parsed: dict):
             raise InstrumentError(f"Images: border exception {name} is not an image in the instrument")
     return {"drive": drive["drive"].strip(), "link": drive["link"], "folder": folder["folder"],
             "border": {"px": int(border["px"]), "except": excepted} if border["px"] else None}
+
+
+def setup_lines(parsed: dict, regex) -> list:
+    return [m for note in parsed["setup"] for m in regex.finditer(note)]
+
+
+def field_list(parsed: dict, kind: str):
+    lines = [m.group(1) for m in setup_lines(parsed, re.compile(RE_FIELDS_LINE.format(kind), re.MULTILINE))]
+    if len(lines) > 1:
+        raise InstrumentError(f"more than one `{kind} fields:` line")
+    return [f.strip() for f in lines[0].split(",") if f.strip()] if lines else None
+
+
+def list_id(line: str, what: str) -> str:
+    m = RE_LIST_ID.search(line)
+    if not m:
+        raise InstrumentError(f'{what} must name its contact list as contact list "<name>" (CG_…): {line.strip()}')
+    return m.group(1)
+
+
+def workflow_setup(parsed: dict):
+    """`Workflow "<name>": … contact list "<name>" (CG_…) …` plus `Workflow fields: source → target, …`."""
+    lines, fields = setup_lines(parsed, RE_WORKFLOW_LINE), field_list(parsed, "Workflow")
+    if not lines and fields is None:
+        return None
+    if len(lines) != 1 or fields is None:
+        raise InstrumentError("a workflow needs one `Workflow \"<name>\": …` line and one `Workflow fields:` line")
+    pairs = [f.split("→") for f in fields]
+    if any(len(p) != 2 or not p[0].strip() or not p[1].strip() for p in pairs):
+        raise InstrumentError(f"Workflow fields: write each as `source → target`: {', '.join(fields)}")
+    return {"name": lines[0]["name"], "list": list_id(lines[0]["rest"], "Workflow"),
+            "fields": {s.strip(): d.strip() for s, d in pairs}}
+
+
+def authenticator_setup(parsed: dict):
+    """Only an instrument that lists `Authenticator fields:` takes part in a handoff, so older ones still parse."""
+    lines, fields = setup_lines(parsed, RE_AUTH_LINE), field_list(parsed, "Authenticator")
+    if fields is None:
+        return None
+    if len(lines) != 1:
+        raise InstrumentError("`Authenticator fields:` needs one `Authenticator before the first block: …` line")
+    return {"list": list_id(lines[0].group(1), "Authenticator"), "fields": fields}
+
+
+def handoff(sender: dict, receiver: dict) -> list[str]:
+    """What breaks between a survey's workflow and the next survey's authenticator."""
+    w, a = sender["workflow"], receiver["authenticator"]
+    if w is None or a is None:
+        raise InstrumentError("handoff needs a Workflow in the first instrument and an Authenticator in the second")
+    problems = [] if w["list"] == a["list"] else [f"the workflow writes to {w['list']} but the authenticator reads {a['list']}"]
+    written = set(w["fields"].values())
+    return problems + [f"the authenticator reads {f}, which the workflow doesn't write" for f in a["fields"] if f not in written]
 
 
 def diff(old: dict, new: dict) -> dict:
@@ -306,11 +366,19 @@ def main():
     p_assign.add_argument("file", type=Path)
     p_assign.add_argument("line", type=int)
     p_assign.add_argument("qid")
+    p_handoff = sub.add_parser("handoff")
+    p_handoff.add_argument("sender", type=Path)
+    p_handoff.add_argument("receiver", type=Path)
     args = parser.parse_args()
 
     try:
         if args.command == "parse":
             out = parse(args.file.read_text())
+        elif args.command == "handoff":
+            out = handoff(parse(args.sender.read_text()), parse(args.receiver.read_text()))
+            json.dump(out, sys.stdout, indent=2, ensure_ascii=False)
+            print()
+            sys.exit(1 if out else 0)
         elif args.command == "diff":
             out = diff(parse(args.old.read_text()), parse(args.new.read_text()))
         else:

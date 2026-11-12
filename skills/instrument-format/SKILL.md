@@ -21,6 +21,7 @@ The essentials:
 - **Edit only the newest version.** Older `instrument_vN.md` files are frozen: they describe surveys that are already built.
 - **Never invent or edit a QID.** Add new questions as `NEW`. `qualtrics-implement` replaces `NEW` with the real QID.
 - **Image file names end in the display width,** `logo_w300.png`: match nearby images of the same kind, round to 10/50/100, never wider than the file. A changed image or width gets a new file name; that is how the change is detected.
+- **A workflow** that passes data to a later survey is a `Workflow "<name>":` line plus a `Workflow fields: source → target, …` line; the later survey lists what it reads in `Authenticator fields:`. See `format.md`.
 - **The setup's `Images:` line** gives the Drive folder and link, the Qualtrics library folder for the survey, and the border rule; see `format.md`.
 - **Starting a new version:** copy `instrument_v(N-1).md` to `instrument_vN.md` and edit the copy.
 
