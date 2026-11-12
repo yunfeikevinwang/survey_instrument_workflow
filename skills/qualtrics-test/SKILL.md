@@ -9,13 +9,13 @@ Parts 1 and 2 only read, through the REST API. Part 3 walks the survey in a brow
 
 ## Inputs
 - `instrument_vN.md`.
-- The instance: `qualtrics` (Stanford) or `qualtrics-mit` (MIT).
+- The Qualtrics account: its name in the secrets file, e.g. `mit` (see the README, "Setup").
 - The survey ID.
 - For Part 3: how the walks reach the survey (see below), and whether they may pass flow steps with outside effects (web-service calls, end-of-survey redirects), and with which test values.
 
 ## 1. Structural check (script, by QID)
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <instance>
+source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <account>
 S=${CLAUDE_PLUGIN_ROOT}/scripts
 mkdir -p .qualtrics
 python3 $S/qualtrics.py dump <SURVEY_ID> > .qualtrics/test.json

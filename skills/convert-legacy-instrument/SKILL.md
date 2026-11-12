@@ -10,7 +10,7 @@ Turn a `.docx` instrument into `instrument_vN.md` and `images_vN/`, following `$
 ## Inputs (ask for any that are missing)
 - The `.docx` path and the version number N.
 - The output folder.
-- Whether the instrument is already live in Qualtrics. If so, get the instance (`qualtrics` = Stanford, `qualtrics-mit` = MIT) and the survey ID or name.
+- Whether the instrument is already live in Qualtrics. If so, get the Qualtrics account (its name in the secrets file, e.g. `mit`) and the survey ID or name.
 - Whether it updates an instrument that is already converted. If so, get the path to `instrument_v(N-1).md`.
 
 If the doc covers more than one Qualtrics survey, write one instrument per survey: QIDs are only unique within a survey. Use the live block lists to find where the doc splits, and report the split.
@@ -37,7 +37,7 @@ Copy the `.docx` into a fresh, empty directory under the scratchpad and work onl
 5. **QIDs.**
    - **Survey is live:** dump it, then give each question its QID by matching the text against the dump. Use the survey's block names for the `##` headers.
      ```bash
-     source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <instance>
+     source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <account>
      python3 ${CLAUDE_PLUGIN_ROOT}/scripts/qualtrics.py dump <SURVEY_ID> > <scratch>/live.json
      ```
      List every match you are not sure of.

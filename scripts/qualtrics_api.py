@@ -1,6 +1,6 @@
 """Writes to Qualtrics through the REST API (curl underneath: python.org builds on macOS lack CA certificates).
 
-Credentials come from the environment: `source scripts/load_env.sh <instance>` first.
+Credentials come from the environment: `source scripts/load_env.sh <account>` first.
 Every write is appended to a JSON-lines log when `log` is given.
 """
 

@@ -11,7 +11,7 @@ All Qualtrics calls go through the REST API (`curl` or Python).
 
 ## Inputs (ask for any that are missing)
 - `instrument_v(N-1).md` and `instrument_vN.md`.
-- The instance: `qualtrics` (Stanford) or `qualtrics-mit` (MIT).
+- The Qualtrics account: its name in the secrets file, e.g. `mit` (see the README, "Setup").
 - The source survey: the Qualtrics project for version N−1. If the user names it rather than giving an ID, list the surveys (`GET /API/v3/surveys`, `.result.elements`) and confirm which one.
 - The local path of the shared drive's root (e.g. the Google Drive for desktop mount), so that `<root>/<Drive path>` from the `Images:` line holds the images. Only needed when the instrument uses images.
 - **First build:** if there's no previous survey, the user creates an empty survey in Qualtrics, and `instrument_v(N-1).md` is just a title line. Every question is then `NEW`.
@@ -20,7 +20,7 @@ Work in `./.qualtrics/vN/`, and make sure the repository's `.gitignore` covers `
 
 ## 1. Check the starting point
 ```bash
-source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <instance>
+source ${CLAUDE_PLUGIN_ROOT}/scripts/load_env.sh <account>
 S=${CLAUDE_PLUGIN_ROOT}/scripts
 python3 $S/instrument.py diff instrument_v(N-1).md instrument_vN.md > .qualtrics/vN/diff.json
 python3 $S/qualtrics.py dump <SOURCE_ID> > .qualtrics/vN/source.json

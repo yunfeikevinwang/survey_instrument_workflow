@@ -11,7 +11,7 @@ File names never change meaning (a changed image gets a new name), so a register
 Each question's <img> tags (and `<!-- image: … -->` placeholders) are replaced in order with tags at
 the width in the file name, the height from the file's pixels, and the setup's border. Nothing is deleted.
 
-Credentials come from the environment: `source scripts/load_env.sh <instance>` first.
+Credentials come from the environment: `source scripts/load_env.sh <account>` first.
 """
 
 import argparse

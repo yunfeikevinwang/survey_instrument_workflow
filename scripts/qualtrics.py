@@ -3,7 +3,7 @@
   qualtrics.py dump SURVEY_ID              normalized snapshot of the survey (JSON)
   qualtrics.py compare INSTRUMENT DUMP     mismatches between an instrument and a dump (JSON)
 
-Credentials come from the environment: `source scripts/load_env.sh <instance>` first.
+Credentials come from the environment: `source scripts/load_env.sh <account>` first.
 """
 
 import argparse
